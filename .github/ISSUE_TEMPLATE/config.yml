@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Báo cáo bảo mật
+    url: https://github.com/MinhThang1009/student-email-tools/security/policy
+    about: Báo cáo riêng tư lỗ hổng bảo mật, không mở issue công khai.
