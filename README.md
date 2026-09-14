@@ -119,7 +119,15 @@ python -m coverage report --fail-under=100
 python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
+python -m ruff check scripts --ignore E501
+python -m ruff format --check scripts
+python -m mypy --ignore-missing-imports scripts
+python -m compileall -q scripts
 ```
+
+The maintenance-script lint intentionally ignores `E501` for long parser and
+report-format definitions; import, correctness, type, format, and bytecode checks
+remain enforced.
 
 ## 6. Contributing and support
 

@@ -52,7 +52,7 @@ def test_ci_requires_a_package_build_gate() -> None:
 
     assert "package-build:" in ci
     assert "python -m build --sdist --wheel" in ci
-    assert "needs: [test, package-build]" in ci
+    assert "needs: [test, package-build, maintenance-quality]" in ci
     assert "PACKAGE_BUILD_RESULT: ${{ needs.package-build.result }}" in ci
 
 

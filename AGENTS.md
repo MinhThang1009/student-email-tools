@@ -20,6 +20,10 @@ This file is the shared instruction entry point for coding agents that support
 - `python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests`
 - `python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests`
 - `python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py`
+- `python -m ruff check scripts --ignore E501`
+- `python -m ruff format --check scripts`
+- `python -m mypy --ignore-missing-imports scripts`
+- `python -m compileall -q scripts`
 
 ## Pull requests
 

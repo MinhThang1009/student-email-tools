@@ -9,12 +9,12 @@ import os
 import re
 import stat
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import quote
 from urllib.request import HTTPRedirectHandler, Request, build_opener
-
 
 GITHUB_API_URL = "https://api.github.com"
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
@@ -148,9 +148,7 @@ RELEASE_TAG_PATTERN = re.compile(
     r"v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
 )
 STABLE_ACTION_TAG_PATTERN = re.compile(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)")
-WORKFLOW_DIRECTORIES = (
-    Path(".github/workflows"),
-)
+WORKFLOW_DIRECTORIES = (Path(".github/workflows"),)
 ALLOWED_ACTION_REPOSITORIES = frozenset(
     {
         "actions/attest",
