@@ -29,6 +29,8 @@ def test_release_please_passes_pat_to_reusable_release_engine() -> None:
     assert "ref: ${{ steps.release.outputs.commit_sha }}" in release_engine
     assert "publish_latest" in release_engine
     assert "gh api --paginate --slurp" in release_engine
+    assert '"repos/${REPOSITORY}/releases?per_page=100" |' in release_engine
+    assert "jq -r 'map(.[]) |" in release_engine
     dispatch_block = release_engine.split("  workflow_dispatch:", 1)[1].split(
         "  release:", 1
     )[0]
