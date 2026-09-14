@@ -22,7 +22,7 @@ EMAIL_COLUMN_ALIASES = {"email", "email address", "e-mail", "e-mail address"}
 
 PREFIX_SEPARATOR = re.compile(r"\s*-\s*")
 INVALID_LOCAL_PART_CHARS = re.compile(r"[^a-z0-9]")
-PANDAS_MANGLED_COLUMN_PATTERN = re.compile(r"^(?P<base>.+)\.[1-9]\d*$")
+PANDAS_MANGLED_COLUMN_PATTERN = re.compile(r"^(?P<base>.+?)\s*\.[1-9]\d*$")
 NUMBER_AFTER_DOT = re.compile(r"^[a-z0-9]+\.([0-9]+)[a-z0-9]*@[^@]+$")
 DOMAIN_PATTERN = re.compile(
     r"(?=.{1,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}\Z",

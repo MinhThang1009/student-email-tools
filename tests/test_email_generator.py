@@ -208,6 +208,16 @@ def test_normalize_required_columns_supports_email_aliases_and_errors() -> None:
     with pytest.raises(ValueError, match="has duplicate columns"):
         normalize_required_columns(pandas_mangled_required, "input.xlsx")
 
+    pandas_mangled_required_with_spacing = pd.DataFrame(
+        [["A", "B", "C"]],
+        columns=["First name ", "First name ", "Last name"],
+    )
+    with pytest.raises(ValueError, match="has duplicate columns"):
+        normalize_required_columns(
+            pandas_mangled_required_with_spacing,
+            "input.xlsx",
+        )
+
     pandas_mangled_email = pd.DataFrame(
         [["A", "B", "one@example.com", "two@example.com"]],
         columns=["First name", "Last name", "Email", "Email.1"],
