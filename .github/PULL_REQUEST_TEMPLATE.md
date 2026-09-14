@@ -1,31 +1,32 @@
 <!-- repo-scaffold:pr-template=default -->
 
-## Mục đích
+## Purpose
 
-<!-- Một hoặc hai câu về thay đổi này và lý do thực hiện. -->
+<!-- One or two sentences: what this PR does and why. -->
 
-## Thay đổi chính
-
--
-
-## Cách kiểm thử
+## Key changes
 
 -
 
-## Danh sách bắt buộc
+## How to test
+
+-
+
+## Required checklist
 
 <!-- repo-scaffold:required-checklist:start -->
-- [ ] CI đã pass trên commit của pull request
-- [ ] Đã tự review diff và ghi lại bằng chứng verification
-- [ ] Không có secret, credential, dữ liệu riêng tư hoặc scaffold marker chưa được thay thế
+- [ ] CI has passed for the pull request commit
+
+- [ ] Self-reviewed the diff and recorded verification evidence
+- [ ] No secret, credential, private data, or unresolved scaffold marker is included
 <!-- repo-scaffold:required-checklist:end -->
 
-## Khi phù hợp
+## If applicable
 
 <!-- repo-scaffold:optional-checklist:start -->
-- [ ] Đã cập nhật test cho thay đổi hành vi
-- [ ] Đã cập nhật tài liệu cho thay đổi hướng tới người dùng hoặc contributor
-- [ ] Đã xem xét compatibility, rollback, performance hoặc release
+- [ ] Updated tests for behavior changes
+- [ ] Updated documentation for user-facing or contributor-facing changes
+- [ ] Reviewed external requirements, compatibility, migration, rollback, performance, or release effects
 <!-- repo-scaffold:optional-checklist:end -->
 
-<!-- Đóng #<issue> nếu phù hợp -->
+<!-- Closes #<issue> if applicable -->

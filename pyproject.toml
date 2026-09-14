@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "student-email-tools"
+version = "0.1.0"
+description = "Python tools for generating and formatting student email lists."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openpyxl>=3.1",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.0",
+    "ruff>=0.9",
+]
+xls = ["xlrd>=2.0"]
+
+[project.scripts]
+generate-emails = "email_tools.email_generator:main"
+format-email-blocks = "email_tools.text_blocks:main"
+
+[tool.setuptools.packages.find]
+include = ["email_tools*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+ignore_missing_imports = true

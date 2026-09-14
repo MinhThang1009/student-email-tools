@@ -1,4 +1,4 @@
-<!-- Canonical Contributor Covenant v3.0, from commit c07bfb0567ef857617faa916ff688943523f7000. -->
+<!-- Canonical Contributor Covenant, version 3.0, from commit c07bfb0567ef857617faa916ff688943523f7000. -->
 
 # Contributor Covenant Code of Conduct
 
@@ -37,7 +37,7 @@ This Code of Conduct applies to all participants in all community spaces. It als
 
 ### Reporting Violations.
 
-To report a violation, contact the enforcement team via [toanhoc29@gmail.com](mailto:toanhoc29@gmail.com).
+To report a violation, contact the enforcement team via [thangminh1009@gmail.com](mailto:thangminh1009@gmail.com).
 
 The enforcement team will strive to protect the privacy of the reporter. They will review and investigate reports in a prompt and fair manner. A confirmed violation of our community standards warrants an enforcement action.
 
