@@ -285,6 +285,17 @@ def normalize_required_columns(
             raise ValueError(
                 f"Excel file {source_name} is missing email column: {email_column!r}"
             )
+        email_alias_matches = [
+            column
+            for column in dataframe.columns
+            if (
+                str(column).strip().casefold() in EMAIL_COLUMN_ALIASES
+                or pandas_mangled_base(str(column).strip().casefold())
+                in EMAIL_COLUMN_ALIASES
+            )
+        ]
+        if any(column not in email_matches for column in email_alias_matches):
+            raise ValueError(f"Excel file {source_name} has duplicate email columns")
     else:
         email_matches = [
             column

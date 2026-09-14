@@ -75,7 +75,8 @@ Each Excel file produces a TXT file with the same basename. The parser handles
 mixed code/name formats, Vietnamese diacritics, and invalid local-part
 characters. If an `Email`, `Email address`, or custom email column is present,
 valid values are used as row-level overrides. Duplicate output addresses are
-reported and emitted once. Numeric identifiers with at least 13 digits are
+reported and emitted once; ambiguous combinations of multiple email columns
+are rejected. Numeric identifiers with at least 13 digits are
 emitted as `identifier@domain`; shorter or alphanumeric prefixes use the
 name-based rule.
 
