@@ -3,7 +3,9 @@ name: Release engine
 # Reusable and manually dispatchable engine that builds and publishes one GitHub
 # Release for an explicit tag. Assets are attached while the Release is a draft,
 # then the draft is published so the workflow is compatible with repositories
-# that enforce immutable releases.
+# that enforce immutable releases. The release event also runs the direct PyPI
+# publisher job below, because PyPI Trusted Publishing does not support a
+# publisher action running inside a reusable workflow.
 on:
   workflow_call:
     inputs:
@@ -25,6 +27,8 @@ on:
         description: Full commit SHA that the version tag must resolve to
         required: true
         type: string
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -37,6 +41,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.event_name != 'release' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -197,6 +202,7 @@ jobs:
           retention-days: 1
 
   attest:
+    if: ${{ github.event_name != 'release' }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -234,15 +240,12 @@ jobs:
           subject-path: dist/**
 
   publish:
+    if: ${{ github.event_name != 'release' }}
     needs: [build, attest]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment:
-      name: pypi
-      url: https://pypi.org/p/student-email-tools
     permissions:
       contents: write
-      id-token: write
     env:
       RELEASE_TAG: ${{ inputs.tag }}
       RELEASE_COMMIT_SHA: ${{ inputs.commit_sha }}
@@ -252,24 +255,6 @@ jobs:
         with:
           name: release-assets-${{ inputs.commit_sha }}
           path: dist/
-
-      - name: Validate downloaded release artifacts
-        shell: bash
-        run: |
-          set -euo pipefail
-          if find dist -type l -print -quit | grep -q .; then
-            echo "::error::Downloaded release artifacts must not contain symbolic links."
-            exit 1
-          fi
-          if find dist ! -type d ! -type f -print -quit | grep -q .; then
-            echo "::error::Downloaded release artifacts must contain only directories and regular files."
-            exit 1
-          fi
-
-      - name: Publish Python distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
-        with:
-          packages-dir: dist/pypi/
 
       - name: Attach assets and publish the GitHub Release
         env:
@@ -400,3 +385,38 @@ jobs:
             echo "::error::The Release is already published and mutable; refusing to replace public assets. Create a new version tag instead."
             exit 1
           fi
+
+  publish_pypi:
+    name: Publish Python distributions to PyPI
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/p/student-email-tools
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout published tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.x"
+
+      - name: Build Python distributions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check "build==1.6.1"
+          python -m build --sdist --wheel
+
+      - name: Publish Python distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: dist/
