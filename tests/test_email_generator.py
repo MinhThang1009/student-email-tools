@@ -21,6 +21,7 @@ from email_tools.email_generator import (
     main,
     normalize_email_domain,
     normalize_email_override,
+    normalize_integral_numeric_text,
     normalize_local_part,
     normalize_required_columns,
     parse_args,
@@ -141,6 +142,20 @@ def test_extract_helpers_cover_empty_and_fallback_values() -> None:
     assert extract_last_component("- Name") == "Name"
     assert extract_last_component_from_row("No separator", "- 71K01") is None
     assert extract_last_component_from_row("Code - 123 - Group", "- 71K01") is None
+
+
+def test_integral_numeric_identifiers_do_not_gain_spurious_zeroes() -> None:
+    assert normalize_integral_numeric_text("2673201040001.0") == "2673201040001"
+    assert normalize_integral_numeric_text("2673201040001.00") == "2673201040001"
+    assert normalize_integral_numeric_text("2673201040001.5") == "2673201040001.5"
+
+    dataframe = pd.DataFrame(
+        {
+            "First name": [2673201040001.0, "2673201040001.0"],
+            "Last name": ["Adam", "Adam"],
+        }
+    )
+    assert generate_emails(dataframe) == ["2673201040001@vanlanguni.vn"]
 
 
 def test_normalize_email_values_and_domains() -> None:

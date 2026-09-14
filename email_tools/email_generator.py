@@ -22,6 +22,7 @@ EMAIL_COLUMN_ALIASES = {"email", "email address", "e-mail", "e-mail address"}
 
 PREFIX_SEPARATOR = re.compile(r"\s*-\s*")
 INVALID_LOCAL_PART_CHARS = re.compile(r"[^a-z0-9]")
+INTEGRAL_NUMERIC_TEXT_PATTERN = re.compile(r"^(?P<integer>[0-9]+)\.0+$")
 PANDAS_MANGLED_COLUMN_PATTERN = re.compile(r"^(?P<base>.+?)\s*\.[1-9]\d*$")
 NUMBER_AFTER_DOT = re.compile(r"^[a-z0-9]+\.([0-9]+)[a-z0-9]*@[^@]+$")
 DOMAIN_PATTERN = re.compile(
@@ -34,6 +35,12 @@ EMAIL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 ESCAPED_AT = re.compile(r"\\+@")
+
+
+def normalize_integral_numeric_text(text: str) -> str:
+    """Remove a spreadsheet-style zero fraction from an integer value."""
+    match = INTEGRAL_NUMERIC_TEXT_PATTERN.fullmatch(text)
+    return match.group("integer") if match else text
 
 
 @dataclass(frozen=True)
@@ -85,10 +92,11 @@ def extract_component(
 
     text = str(value).strip()
     if "-" not in text:
-        return text or None
+        normalized = normalize_integral_numeric_text(text)
+        return normalized or None
 
     parts = PREFIX_SEPARATOR.split(text, maxsplit=1)
-    prefix = parts[0].strip()
+    prefix = normalize_integral_numeric_text(parts[0].strip())
     if prefix:
         return prefix
 
