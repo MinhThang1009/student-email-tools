@@ -21,11 +21,19 @@ def test_release_please_passes_pat_to_reusable_release_engine() -> None:
     )
     assert "RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}" in release_please
     assert "github.event_name == 'release'" in release_engine
+    assert "github.event_name == 'workflow_call'" in release_engine
     assert (
-        "EXPECTED_COMMIT: ${{ github.event.release.target_commitish }}"
-        in release_engine
+        "EVENT_COMMIT: ${{ github.event.release.target_commitish }}" in release_engine
     )
     assert "The published release tag no longer resolves" in release_engine
+    assert "ref: ${{ steps.release.outputs.commit_sha }}" in release_engine
+    assert "publish_latest" in release_engine
+    assert "gh api --paginate --slurp" in release_engine
+    dispatch_block = release_engine.split("  workflow_dispatch:", 1)[1].split(
+        "  release:", 1
+    )[0]
+    assert "      tag:" not in dispatch_block
+    assert "      commit_sha:" not in dispatch_block
 
 
 def test_codeql_actions_use_the_current_reviewed_release_pin() -> None:

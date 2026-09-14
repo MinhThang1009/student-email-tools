@@ -1,11 +1,11 @@
 name: Release engine
 
-# Reusable and manually dispatchable engine that builds and publishes one GitHub
-# Release for an explicit tag. Assets are attached while the Release is a draft,
-# then the draft is published so the workflow is compatible with repositories
-# that enforce immutable releases. A release event or explicit manual recovery
-# runs the direct PyPI publisher job below, because PyPI Trusted Publishing does
-# not support a publisher action running inside a reusable workflow.
+# Reusable engine that builds and publishes one GitHub Release for an explicit
+# tag. Assets are attached while the Release is a draft, then the draft is
+# published so the workflow is compatible with repositories that enforce
+# immutable releases. A release event or confirmed manual recovery runs the
+# direct PyPI publisher job below, because PyPI Trusted Publishing does not
+# support a publisher action running inside a reusable workflow.
 on:
   workflow_call:
     inputs:
@@ -23,17 +23,9 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      tag:
-        description: Full version tag to build and publish
+      publish_latest:
+        description: Publish the newest published GitHub Release to PyPI
         required: true
-        type: string
-      commit_sha:
-        description: Full commit SHA that the version tag must resolve to
-        required: true
-        type: string
-      pypi_only:
-        description: Publish an existing tag to PyPI without changing its GitHub Release
-        required: false
         default: false
         type: boolean
   release:
@@ -50,7 +42,7 @@ concurrency:
 
 jobs:
   build:
-    if: ${{ github.event_name != 'release' && !inputs.pypi_only }}
+    if: ${{ github.event_name == 'workflow_call' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -66,8 +58,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ ! "${RELEASE_TAG}" =~ ^v.+ ]]; then
-            echo "::error::Release tag must start with 'v' and contain a version value."
+          if [[ ! "${RELEASE_TAG}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Release tag must be a semantic version tag beginning with 'v'."
             exit 1
           fi
           if [[ ! "${RELEASE_COMMIT_SHA}" =~ ^[0-9a-fA-F]+$ ]] ||
@@ -211,7 +203,7 @@ jobs:
           retention-days: 1
 
   attest:
-    if: ${{ github.event_name != 'release' && !inputs.pypi_only }}
+    if: ${{ github.event_name == 'workflow_call' }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -249,7 +241,7 @@ jobs:
           subject-path: dist/**
 
   publish:
-    if: ${{ github.event_name != 'release' && !inputs.pypi_only }}
+    if: ${{ github.event_name == 'workflow_call' }}
     needs: [build, attest]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -399,7 +391,7 @@ jobs:
 
   publish_pypi:
     name: Publish Python distributions to PyPI
-    if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.pypi_only) }}
+    if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish_latest == true) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
@@ -414,51 +406,92 @@ jobs:
         shell: bash
         env:
           EVENT_TAG: ${{ github.event.release.tag_name }}
-          INPUT_TAG: ${{ inputs.tag }}
+          EVENT_COMMIT: ${{ github.event.release.target_commitish }}
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          tag="${EVENT_TAG:-${INPUT_TAG}}"
-          if [[ ! "${tag}" =~ ^v.+ ]]; then
-            echo "::error::A valid release tag is required."
+
+          resolve_tag_target() {
+            local tag="$1"
+            local encoded_tag object_sha object_type ref_endpoint ref_json
+            local tag_endpoint tag_json
+            encoded_tag="$(jq -Rr @uri <<<"${tag}")"
+            ref_endpoint="repos/${REPOSITORY}/git/ref/tags/${encoded_tag}"
+            ref_json="$(gh api "${ref_endpoint}")"
+            object_type="$(jq -r '.object.type // empty' <<<"${ref_json}")"
+            object_sha="$(jq -r '.object.sha // empty' <<<"${ref_json}")"
+            for _ in {1..32}; do
+              if [[ ! "${object_sha}" =~ ^[0-9a-fA-F]+$ ]] ||
+                { [[ "${#object_sha}" -ne 40 ]] &&
+                  [[ "${#object_sha}" -ne 64 ]]; }; then
+                echo "::error::The release tag API returned an invalid Git object ID." >&2
+                return 1
+              fi
+              case "${object_type}" in
+                commit)
+                  printf '%s\n' "${object_sha}"
+                  return 0
+                  ;;
+                tag)
+                  tag_endpoint="repos/${REPOSITORY}/git/tags/${object_sha}"
+                  tag_json="$(gh api "${tag_endpoint}")"
+                  object_type="$(jq -r '.object.type // empty' <<<"${tag_json}")"
+                  object_sha="$(jq -r '.object.sha // empty' <<<"${tag_json}")"
+                  ;;
+                *)
+                  echo "::error::The release tag resolves to '${object_type}', not a commit." >&2
+                  return 1
+                  ;;
+              esac
+            done
+            echo "::error::The release tag contains more than 32 nested annotated tags." >&2
+            return 1
+          }
+
+          if [[ -n "${EVENT_TAG}" ]]; then
+            tag="${EVENT_TAG}"
+            expected_commit="${EVENT_COMMIT}"
+          else
+            tag="$(gh api --paginate --slurp \
+              "repos/${REPOSITORY}/releases?per_page=100" \
+              --jq 'map(.[]) | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at) | last | .tag_name')"
+            expected_commit=""
+          fi
+          if [[ ! "${tag}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::A valid semantic version release tag is required."
             exit 1
           fi
-          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          actual_commit="$(resolve_tag_target "${tag}")"
+          if [[ -n "${expected_commit}" ]]; then
+            if [[ ! "${expected_commit}" =~ ^[0-9a-fA-F]+$ ]] ||
+              { [[ "${#expected_commit}" -ne 40 ]] &&
+                [[ "${#expected_commit}" -ne 64 ]]; } ||
+              [[ "${actual_commit,,}" != "${expected_commit,,}" ]]; then
+              echo "::error::The published release tag no longer resolves to the release commit."
+              exit 1
+            fi
+          fi
+          {
+            printf 'tag=%s\n' "${tag}"
+            printf 'commit_sha=%s\n' "${actual_commit}"
+          } >> "${GITHUB_OUTPUT}"
 
-      - name: Checkout published tag
+      - name: Checkout published release commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.release.outputs.tag }}
+          ref: ${{ steps.release.outputs.commit_sha }}
           persist-credentials: false
 
-      - name: Verify published release commit
-        if: ${{ github.event_name == 'release' }}
+      - name: Verify checked-out release commit
         shell: bash
         env:
-          EXPECTED_COMMIT: ${{ github.event.release.target_commitish }}
-        run: |
-          set -euo pipefail
-          if [[ ! "${EXPECTED_COMMIT}" =~ ^[0-9a-fA-F]+$ ]] ||
-            { [[ "${#EXPECTED_COMMIT}" -ne 40 ]] &&
-              [[ "${#EXPECTED_COMMIT}" -ne 64 ]]; }; then
-            echo "::error::The published release target must be a full commit SHA."
-            exit 1
-          fi
-          actual_commit="$(git rev-parse HEAD)"
-          if [[ "${actual_commit,,}" != "${EXPECTED_COMMIT,,}" ]]; then
-            echo "::error::The published release tag no longer resolves to the release commit."
-            exit 1
-          fi
-
-      - name: Verify manual recovery commit
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        shell: bash
-        env:
-          EXPECTED_COMMIT: ${{ inputs.commit_sha }}
+          EXPECTED_COMMIT: ${{ steps.release.outputs.commit_sha }}
         run: |
           set -euo pipefail
           actual_commit="$(git rev-parse HEAD)"
           if [[ "${actual_commit,,}" != "${EXPECTED_COMMIT,,}" ]]; then
-            echo "::error::The release tag does not resolve to the requested commit."
+            echo "::error::The checked-out release commit is not the verified release commit."
             exit 1
           fi
 
