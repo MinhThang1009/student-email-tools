@@ -48,3 +48,5 @@ jobs:
     with:
       tag: ${{ needs.release_please.outputs.tag_name }}
       commit_sha: ${{ needs.release_please.outputs.commit_sha }}
+    secrets:
+      RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}

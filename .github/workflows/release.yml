@@ -17,6 +17,10 @@ on:
         description: Full commit SHA that the version tag must resolve to
         required: true
         type: string
+    secrets:
+      RELEASE_PLEASE_TOKEN:
+        description: PAT used to publish the GitHub Release and emit its release event
+        required: true
   workflow_dispatch:
     inputs:
       tag:
@@ -263,7 +267,9 @@ jobs:
 
       - name: Attach assets and publish the GitHub Release
         env:
-          GH_TOKEN: ${{ github.token }}
+          # A PAT-backed release event triggers the direct Trusted Publisher job
+          # below. Manual runs fall back to GITHUB_TOKEN and retain the recovery path.
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
         # release-please creates a draft for this tag. Manual tags have no Release yet.
         # Drafts are returned by the list endpoint to tokens with push access; the
         # get-by-tag endpoint only returns published Releases.

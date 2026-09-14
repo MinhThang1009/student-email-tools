@@ -68,6 +68,9 @@ Or use the entry point after installing the package:
 generate-emails "D:/data/course"
 ```
 
+Generated email files contain 499 addresses per block, followed by 10 blank
+lines.
+
 Each Excel file produces a TXT file with the same basename. The parser handles
 mixed code/name formats, Vietnamese diacritics, and invalid local-part
 characters. If an `Email`, `Email address`, or custom email column is present,
@@ -98,7 +101,7 @@ is supplied.
 python 10lines.py "D:/data/emails.txt"
 ```
 
-The command creates an `_output.txt` file, with 500 lines per block and 10 blank
+The command creates an `_output.txt` file, with 499 lines per block and 10 blank
 lines between blocks by default. Customize the layout with:
 
 ```powershell

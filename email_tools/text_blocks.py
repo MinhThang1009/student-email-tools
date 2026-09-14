@@ -6,7 +6,7 @@ import argparse
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-DEFAULT_LINES_PER_BLOCK = 500
+DEFAULT_LINES_PER_BLOCK = 499
 DEFAULT_GAP_LINES = 10
 OUTPUT_SUFFIX = "_output"
 

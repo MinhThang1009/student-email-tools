@@ -21,6 +21,14 @@ def test_format_lines_adds_gaps_only_between_blocks() -> None:
     ]
 
 
+def test_format_lines_uses_499_line_blocks_and_10_blank_lines_by_default() -> None:
+    formatted = format_lines([str(index) for index in range(500)])
+
+    assert formatted[498] == "498"
+    assert formatted[499:509] == [""] * 10
+    assert formatted[509] == "499"
+
+
 def test_process_folder_does_not_reprocess_generated_outputs(tmp_path) -> None:
     source = tmp_path / "source.txt"
     source.write_text("a\nb\nc\n", encoding="utf-8")

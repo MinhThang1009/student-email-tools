@@ -16,8 +16,8 @@ EMAIL_DOMAIN = "vanlanguni.vn"
 EXCEL_SUFFIXES = {".xls", ".xlsx"}
 LONG_FIRST_PREFIX_LENGTH = 14
 NUMERIC_IDENTIFIER_MIN_LENGTH = 13
-EMAILS_PER_BLOCK = 500
-BLANK_LINES_PER_BLOCK = 5
+EMAILS_PER_BLOCK = 499
+BLANK_LINES_PER_BLOCK = 10
 EMAIL_COLUMN_ALIASES = {"email", "email address", "e-mail", "e-mail address"}
 
 PREFIX_SEPARATOR = re.compile(r"\s*-\s*")
@@ -179,7 +179,10 @@ def normalize_local_part(prefix: object) -> str | None:
 
 def normalize_email_domain(email_domain: str) -> str:
     """Validate and normalize the domain used for generated addresses."""
-    domain = str(email_domain).strip().lstrip("@").casefold()
+    domain = str(email_domain).strip()
+    if domain.startswith("@"):
+        domain = domain[1:]
+    domain = domain.casefold()
     if not DOMAIN_PATTERN.fullmatch(domain):
         raise ValueError(f"Invalid email domain: {email_domain!r}")
     return domain
@@ -192,6 +195,9 @@ def normalize_email_override(value: object) -> str | None:
 
     email = ESCAPED_AT.sub("@", str(value).strip()).casefold()
     if not EMAIL_PATTERN.fullmatch(email):
+        return None
+    local_part = email.rsplit("@", maxsplit=1)[0]
+    if local_part.startswith(".") or local_part.endswith(".") or ".." in local_part:
         return None
     return email
 

@@ -148,11 +148,16 @@ def test_normalize_email_values_and_domains() -> None:
     assert normalize_email_override(r"User\@Example.COM") == "user@example.com"
     assert normalize_email_override(r"User\\@Example.COM") == "user@example.com"
     assert normalize_email_override("not-an-email") is None
+    assert normalize_email_override(".user@example.com") is None
+    assert normalize_email_override("user.@example.com") is None
+    assert normalize_email_override("user..name@example.com") is None
     assert normalize_email_override(None) is None
     assert normalize_email_override(pd.NA) is None
 
     with pytest.raises(ValueError, match="Invalid email domain"):
         normalize_email_domain("not a domain")
+    with pytest.raises(ValueError, match="Invalid email domain"):
+        normalize_email_domain("@@example.com")
 
 
 def test_normalize_required_columns_supports_email_aliases_and_errors() -> None:
@@ -274,11 +279,23 @@ def test_write_emails_validates_safety_and_formats_blocks(tmp_path) -> None:
     write_emails(["a@example.com", "b@example.com"], output, block_size=1)
     assert (
         output.read_text(encoding="utf-8")
-        == "a@example.com\n\n\n\n\n\nb@example.com\n\n\n\n\n\n"
+        == "a@example.com\n" + "\n" * 10 + "b@example.com\n" + "\n" * 10
     )
 
     with pytest.raises(FileExistsError, match="already exists"):
         write_emails(["c@example.com"], output, overwrite=False)
+
+
+def test_write_emails_uses_499_email_blocks_and_10_blank_lines(tmp_path) -> None:
+    output = tmp_path / "default-blocks.txt"
+    emails = [f"student{index}@example.com" for index in range(500)]
+
+    write_emails(emails, output)
+
+    lines = output.read_text(encoding="utf-8").splitlines()
+    assert lines[498] == "student498@example.com"
+    assert lines[499:509] == [""] * 10
+    assert lines[509] == "student499@example.com"
 
 
 def test_write_generation_report_serializes_and_respects_flags(tmp_path) -> None:
