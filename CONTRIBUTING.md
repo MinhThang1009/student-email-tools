@@ -1,36 +1,37 @@
-# Đóng góp cho student-email-tools
+# Contributing to student-email-tools
 
-Cảm ơn bạn đã quan tâm đóng góp! Project này xử lý danh sách người học và dữ
-liệu email, vì vậy không được đưa dữ liệu thật lên commit, issue, pull request
-hoặc test fixture.
+Thanks for your interest in contributing! This project processes student lists
+and email data, so do not include real data in commits, issues, pull requests,
+or test fixtures.
 
-## Quy trình
+## Workflow
 
-1. Tạo branch từ `main`, ví dụ `feat/improve-parser`.
-2. Commit theo [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-3. Chạy toàn bộ test, lint, format check và mypy.
-4. Push branch và mở pull request.
+1. Create a branch from `main`, for example `feat/improve-parser`.
+2. Commit using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+3. Run the full test, lint, format, and mypy checks.
+4. Push the branch and open a pull request.
 
-## Kiểm tra local
+## Local checks
 
 ```powershell
 python -m pytest -q
-python -m ruff check email_tools emails.py 10lines.py tests
-python -m ruff format --check email_tools emails.py 10lines.py tests
-python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py
+python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
+python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
+python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
 ```
 
-## Kỳ vọng về mã nguồn
+## Code expectations
 
-- Giữ logic xử lý trong package `email_tools`, launcher gốc chỉ dùng để tương
-  thích với cách chạy cũ.
-- Thêm regression test cho mọi thay đổi hành vi.
-- Dùng `pathlib`, type hints và thông báo lỗi có thể hành động.
-- Không thêm dependency nếu chưa cần thiết.
+- Keep processing logic in the `email_tools` package; root launchers exist for
+  compatibility with the legacy commands.
+- Add a regression test for every behavior change.
+- Use `pathlib`, type hints, and actionable error messages.
+- Do not add a dependency unless it is necessary.
 
-## Báo cáo vấn đề
+## Reporting issues
 
-Với lỗi thông thường, mở [Issue](https://github.com/MinhThang1009/student-email-tools/issues) kèm bước tái hiện tối thiểu và
-dữ liệu đã được ẩn danh. Với vấn đề bảo mật, xem [SECURITY.md](SECURITY.md).
+For ordinary bugs, open an [Issue](https://github.com/MinhThang1009/student-email-tools/issues)
+with minimal reproduction steps and anonymized data. For security issues, see
+[SECURITY.md](SECURITY.md).
 
-Mọi tương tác phải tuân theo [Code of Conduct](CODE_OF_CONDUCT.md).
+All interactions must follow the [Code of Conduct](CODE_OF_CONDUCT.md).

@@ -1,40 +1,40 @@
-name: Đề xuất tính năng
-description: Đề xuất tính năng mới
+name: Feature request
+description: Suggest a new feature
 title: "[Feature]: "
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Vấn đề cần giải quyết
-      description: Tính năng này cần giải quyết vấn đề nào?
+      label: Problem to solve
+      description: What problem should this feature solve?
     validations:
       required: true
   - type: textarea
     id: solution
     attributes:
-      label: Giải pháp đề xuất
-      description: Mô tả hành vi mong muốn và bề mặt dự án bị ảnh hưởng.
+      label: Proposed solution
+      description: Describe the desired behavior and affected project surface.
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: Các phương án đã cân nhắc
-      description: Mô tả các phương án hoặc cách khắc phục đã cân nhắc.
+      label: Alternatives considered
+      description: Describe alternatives or workarounds considered.
     validations:
       required: false
   - type: textarea
     id: context
     attributes:
-      label: Bối cảnh bổ sung
-      description: Nêu các ràng buộc, lo ngại tương thích hoặc nguồn chính thống liên quan.
+      label: Additional context
+      description: Include relevant constraints, compatibility concerns, or authoritative sources.
     validations:
       required: false
   - type: checkboxes
     id: sensitive_information
     attributes:
-      label: Thông tin nhạy cảm
+      label: Sensitive information
       options:
-        - label: Tôi không đưa secrets, credentials hoặc thông tin riêng tư vào.
+        - label: I did not include secrets, credentials, or private information.
           required: true

@@ -1,14 +1,15 @@
-# Chính sách bảo mật
+# Security Policy
 
-## Báo cáo lỗ hổng
+## Reporting a Vulnerability
 
-Không mở issue công khai cho lỗ hổng bảo mật. Hãy gửi email đến
-**toanhoc29@gmail.com** kèm mô tả, bước tái hiện tối thiểu và tác động. Không
-đính kèm Excel, danh sách email thật, credential hoặc dữ liệu cá nhân.
+Do not open a public issue for security vulnerabilities. Email
+**thangminh1009@gmail.com** with a description, minimal reproduction steps, and
+impact. Do not attach Excel files, real email lists, credentials, or personal
+data.
 
-Nhóm duy trì sẽ xác nhận báo cáo sớm nhất có thể và cập nhật khi có tiến triển
-đáng kể.
+The maintainers will acknowledge the report as soon as practical and provide
+updates when material progress is available.
 
-## Phiên bản được hỗ trợ
+## Supported Versions
 
-Phiên bản phát hành mới nhất nhận các bản vá bảo mật.
+The latest released version receives security fixes.

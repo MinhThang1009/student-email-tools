@@ -1,34 +1,34 @@
 <!-- repo-scaffold:pr-template=documentation -->
 
-## Mục đích
+## Purpose
 
-<!-- Giải thích nhu cầu tài liệu và đối tượng đọc. -->
+<!-- Explain the documentation need and its intended audience. -->
 
-## Thay đổi chính
-
--
-
-## Nguồn đã đối chiếu
+## Key changes
 
 -
 
-## Cách kiểm thử
+## Sources reviewed
 
 -
 
-## Danh sách bắt buộc
+## How to test
+
+-
+
+## Required checklist
 
 <!-- repo-scaffold:required-checklist:start -->
-- [ ] Tài liệu khớp với implementation hiện tại hoặc policy đã được phê duyệt
-- [ ] Đã ghi lại nguồn hoặc hành vi dự án chứng minh cho thay đổi
-- [ ] Đã chạy kiểm tra tài liệu
-- [ ] Không có secret, credential, dữ liệu riêng tư hoặc scaffold marker chưa được thay thế
+- [ ] The documentation matches the current implementation or approved policy
+- [ ] Sources or project behavior supporting the change are recorded above
+- [ ] Documentation checks were run
+- [ ] No secret, credential, private data, or unresolved scaffold marker is included
 <!-- repo-scaffold:required-checklist:end -->
 
-## Khi phù hợp
+## If applicable
 
 <!-- repo-scaffold:optional-checklist:start -->
-- [ ] Đã cập nhật nguồn chính thống, điều kiện tiên quyết, giới hạn, migration, localization hoặc hướng dẫn release
+- [ ] Updated authoritative-source, prerequisite, limitation, migration, localization, or release guidance
 <!-- repo-scaffold:optional-checklist:end -->
 
-<!-- Đóng #<issue> nếu phù hợp -->
+<!-- Closes #<issue> if applicable -->

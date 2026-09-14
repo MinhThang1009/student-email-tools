@@ -1,7 +1,10 @@
-# Hỗ trợ
+# Support
 
-Cần trợ giúp với `student-email-tools`?
+Need help with `student-email-tools`?
 
-- Lỗi và đề xuất: mở [Issue](https://github.com/MinhThang1009/student-email-tools/issues) với dữ liệu đã ẩn danh.
-- Câu hỏi riêng tư: liên hệ `toanhoc29@gmail.com`.
-- Vấn đề bảo mật: xem [SECURITY.md](SECURITY.md), không mở issue công khai.
+- **Bugs and feature requests**: open an [Issue](https://github.com/MinhThang1009/student-email-tools/issues)
+  with anonymized data.
+- **Private questions**: contact `thangminh1009@gmail.com`.
+- **Security**: do not open a public issue; see [SECURITY.md](SECURITY.md).
+
+For anything else, contact `thangminh1009@gmail.com`.

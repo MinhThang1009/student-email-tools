@@ -1,20 +1,20 @@
-name: Báo lỗi
-description: Báo cáo sự cố có thể tái hiện
+name: Bug report
+description: Report a reproducible problem
 title: "[Bug]: "
 labels: [bug]
 body:
   - type: textarea
     id: description
     attributes:
-      label: Mô tả lỗi
-      description: Giải thích sự cố rõ ràng và ngắn gọn.
+      label: Describe the bug
+      description: Explain the problem clearly and concisely.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
-      label: Các bước tái hiện
-      description: Cung cấp chuỗi bước tái hiện ngắn nhất.
+      label: Steps to reproduce
+      description: Provide the smallest reproducible sequence of steps.
       placeholder: |
         1. ...
         2. ...
@@ -24,28 +24,28 @@ body:
   - type: textarea
     id: expected_actual
     attributes:
-      label: Hành vi mong đợi và thực tế
-      description: Nêu điều bạn mong đợi và điều đã xảy ra.
+      label: Expected and actual behavior
+      description: State what you expected and what happened instead.
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
-      label: Môi trường
-      description: Nêu hệ điều hành, phiên bản và trình duyệt nếu phù hợp.
+      label: Environment
+      description: Include the operating system, version, and browser when relevant.
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
-      label: Log hoặc ảnh chụp màn hình
-      description: Đính kèm bằng chứng liên quan khi có. Không đưa secrets vào.
+      label: Logs or screenshots
+      description: Attach relevant evidence when available. Do not include secrets.
     validations:
       required: false
   - type: checkboxes
     id: sensitive_information
     attributes:
-      label: Thông tin nhạy cảm
+      label: Sensitive information
       options:
-        - label: Tôi đã xóa secrets, credentials và thông tin riêng tư.
+        - label: I removed secrets, credentials, and private information.
           required: true

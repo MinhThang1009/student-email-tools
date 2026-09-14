@@ -1,33 +1,32 @@
-# Hướng dẫn cho agent
+# Agent Instructions
 
-Tệp này là điểm vào hướng dẫn dùng chung cho các coding agent hỗ trợ
+This file is the shared instruction entry point for coding agents that support
 `AGENTS.md`.
 
-## Quy ước làm việc
+## Working agreement
 
-- Tuân theo yêu cầu của người dùng và các hướng dẫn đang áp dụng trong
-  repository.
-- Đọc các tệp liên quan trước khi thay đổi và giữ nguyên quy ước riêng của dự
-  án.
-- Giữ thay đổi tập trung, chạy các kiểm tra phù hợp của dự án và báo cáo rõ các
-  kiểm tra không thể chạy.
-- Không commit, push, tạo pull request hoặc thay đổi cấu hình remote nếu người
-  dùng chưa yêu cầu rõ ràng.
+- Follow the user's request and the repository's applicable instructions.
+- Read the relevant files before making a change and preserve project-specific
+  conventions.
+- Keep changes focused, validate them with the project's relevant checks, and
+  report any verification that could not run.
+- Do not commit, push, create pull requests, or change remote settings unless
+  the user explicitly requests that action.
 
-## Lệnh kiểm tra
+## Checks
 
 - `python -m pytest -q`
-- `python -m ruff check email_tools emails.py 10lines.py tests`
-- `python -m ruff format --check email_tools emails.py 10lines.py tests`
-- `python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py`
+- `python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests`
+- `python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests`
+- `python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py`
 
-## Pull request
+## Pull requests
 
-Trước khi tạo hoặc cập nhật pull request, chạy
+Before creating or updating a pull request, run
 `python scripts/pr_template_preflight.py --title "<title>"`.
 
-## Ngôn ngữ
+## Language
 
-Dùng tiếng Việt cho tài liệu hướng tới người dùng và contributor. Giữ nguyên
-các tên lệnh, tên package, protocol literal và Conventional Commit prefix bằng
-tiếng Anh.
+Use English for user-facing and contributor-facing documentation. Keep command
+names, package names, protocol literals, and Conventional Commit prefixes in
+their standard English form.

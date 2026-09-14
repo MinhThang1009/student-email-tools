@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "student-email-tools"
 version = "0.1.0"
-description = "Công cụ Python tạo và định dạng danh sách email sinh viên."
+description = "Python tools for generating and formatting student email lists."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

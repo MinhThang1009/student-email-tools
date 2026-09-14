@@ -2,89 +2,90 @@
 
 # student-email-tools
 
-Công cụ Python tạo và định dạng danh sách email sinh viên từ file cục bộ.
+Python tools for generating and formatting student email lists from local files.
 
 [![CI](https://github.com/MinhThang1009/student-email-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/MinhThang1009/student-email-tools/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
 
-## 1. Tổng quan
+## 1. Overview
 
-Project cung cấp hai lệnh:
+This project provides two commands:
 
-- Tạo email từ các cột `First name` và `Last name` trong file Excel.
-- Chia file TXT thành các block dòng có khoảng cách để dễ sao chép và gửi.
+- Generate email addresses from the `First name` and `Last name` columns in an
+  Excel file.
+- Split a TXT file into spaced line blocks that are easy to copy and send.
 
-File Excel, danh sách email, virtualenv và cache chỉ là dữ liệu local; chúng
-không thuộc repository.
+Excel files, email lists, virtual environments, and caches are local data; they
+do not belong in this repository.
 
-## 2. Yêu cầu
+## 2. Requirements
 
-- Python 3.10 trở lên.
-- `pandas` và `openpyxl` cho file `.xlsx`.
-- Cài thêm extra `xls` nếu cần đọc file `.xls`.
+- Python 3.10 or newer.
+- `pandas` and `openpyxl` for `.xlsx` files.
+- Install the `xls` extra when `.xls` support is needed.
 
-## 3. Cài đặt
+## 3. Installation
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+./.venv/Scripts/python.exe -m pip install -e ".[dev]"
 ```
 
-Để đọc định dạng `.xls`:
+For `.xls` support:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[xls]"
+./.venv/Scripts/python.exe -m pip install -e ".[xls]"
 ```
 
-## 4. Sử dụng
+## 4. Usage
 
-### 4.1 Tạo email từ Excel
+### 4.1 Generate emails from Excel
 
-Đặt file Excel trong một thư mục riêng rồi chạy:
+Place Excel files in a dedicated directory and run:
 
 ```powershell
-python emails.py "D:\du-lieu\course"
+python emails.py "D:/data/course"
 ```
 
-Hoặc dùng entry point sau khi cài package:
+Or use the entry point after installing the package:
 
 ```powershell
-generate-emails "D:\du-lieu\course"
+generate-emails "D:/data/course"
 ```
 
-Mỗi file Excel tạo một file TXT cùng tên. Parser xử lý các dạng mã/tên hỗn
-hợp, loại dấu tiếng Việt và loại ký tự không hợp lệ trong local part.
+Each Excel file produces a TXT file with the same basename. The parser handles
+mixed code/name formats, Vietnamese diacritics, and invalid local-part
+characters.
 
-### 4.2 Định dạng file TXT
+### 4.2 Format TXT files
 
 ```powershell
-python 10lines.py "D:\du-lieu\emails.txt"
+python 10lines.py "D:/data/emails.txt"
 ```
 
-Lệnh tạo file hậu tố `_output.txt`, mặc định 500 dòng mỗi block và 10 dòng
-trống giữa các block. Có thể thay đổi:
+The command creates an `_output.txt` file, with 500 lines per block and 10 blank
+lines between blocks by default. Customize the layout with:
 
 ```powershell
-format-email-blocks "D:\du-lieu\emails.txt" --lines-per-block 100 --gap-lines 2
+format-email-blocks "D:/data/emails.txt" --lines-per-block 100 --gap-lines 2
 ```
 
-## 5. Phát triển
+## 5. Development
 
 ```powershell
 python -m pytest -q
-python -m ruff check email_tools emails.py 10lines.py tests
-python -m ruff format --check email_tools emails.py 10lines.py tests
-python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py
+python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
+python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
+python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
 ```
 
-## 6. Đóng góp và hỗ trợ
+## 6. Contributing and support
 
-Đọc [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md) và
-[SECURITY.md](SECURITY.md). Không commit dữ liệu người học hoặc danh sách
-email thật.
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md), and
+[SECURITY.md](SECURITY.md). Do not commit real student data or email lists.
 
 ## 7. License
 
-Project phát hành theo [MIT License](LICENSE).
+This project is released under the [MIT License](LICENSE).
