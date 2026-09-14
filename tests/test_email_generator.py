@@ -346,6 +346,27 @@ def test_write_emails_validates_safety_and_formats_blocks(tmp_path) -> None:
         write_emails(["c@example.com"], output, overwrite=False)
 
 
+def test_writers_reject_link_like_output_paths(tmp_path, monkeypatch) -> None:
+    output = tmp_path / "out.txt"
+    output.write_text("existing\n", encoding="utf-8")
+    source = tmp_path / "source.txt"
+    source.write_text("a\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        Path,
+        "is_symlink",
+        lambda path: path == output,
+    )
+
+    with pytest.raises(ValueError, match="symbolic link"):
+        write_emails(["a@example.com"], output)
+
+    from email_tools.text_blocks import process_text_file
+
+    with pytest.raises(ValueError, match="symbolic link"):
+        process_text_file(source, output_path=output)
+
+
 def test_write_emails_uses_499_email_blocks_and_10_blank_lines(tmp_path) -> None:
     output = tmp_path / "default-blocks.txt"
     emails = [f"student{index}@example.com" for index in range(500)]

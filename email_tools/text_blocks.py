@@ -6,6 +6,8 @@ import argparse
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
+from email_tools.path_safety import ensure_safe_output_path
+
 DEFAULT_LINES_PER_BLOCK = 499
 DEFAULT_GAP_LINES = 10
 OUTPUT_SUFFIX = "_output"
@@ -64,6 +66,7 @@ def process_text_file(
         if output_path is not None
         else output_path_for(source, output_dir)
     )
+    ensure_safe_output_path(destination)
     if destination == source:
         raise ValueError("Output file must differ from the input file")
     if destination.exists() and not overwrite:

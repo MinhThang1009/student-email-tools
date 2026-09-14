@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from email_tools.path_safety import ensure_safe_output_path
+
 EMAIL_DOMAIN = "vanlanguni.vn"
 EXCEL_SUFFIXES = {".xls", ".xlsx"}
 LONG_FIRST_PREFIX_LENGTH = 14
@@ -436,6 +438,7 @@ def write_emails(
     """Write one email per line with the requested block spacing."""
     if block_size <= 0:
         raise ValueError("block_size must be greater than 0")
+    ensure_safe_output_path(output_path)
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"Output file already exists: {output_path}")
     if dry_run:
@@ -459,6 +462,7 @@ def write_generation_report(
     dry_run: bool = False,
 ) -> None:
     """Write source-data quality reports as UTF-8 JSON."""
+    ensure_safe_output_path(output_path)
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"Report file already exists: {output_path}")
     if dry_run:
