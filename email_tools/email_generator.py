@@ -21,6 +21,8 @@ NUMERIC_IDENTIFIER_MIN_LENGTH = 13
 EMAILS_PER_BLOCK = 499
 BLANK_LINES_PER_BLOCK = 10
 EMAIL_COLUMN_ALIASES = {"email", "email address", "e-mail", "e-mail address"}
+MAX_EMAIL_LENGTH = 254
+MAX_LOCAL_PART_LENGTH = 64
 
 PREFIX_SEPARATOR = re.compile(r"\s*-\s*")
 INVALID_LOCAL_PART_CHARS = re.compile(r"[^a-z0-9]")
@@ -205,9 +207,13 @@ def normalize_email_override(value: object) -> str | None:
         return None
 
     email = ESCAPED_AT.sub("@", str(value).strip()).casefold()
+    if len(email) > MAX_EMAIL_LENGTH:
+        return None
     if not EMAIL_PATTERN.fullmatch(email):
         return None
     local_part = email.rsplit("@", maxsplit=1)[0]
+    if len(local_part) > MAX_LOCAL_PART_LENGTH:
+        return None
     if local_part.startswith(".") or local_part.endswith(".") or ".." in local_part:
         return None
     return email
@@ -216,7 +222,12 @@ def normalize_email_override(value: object) -> str | None:
 def extract_number_after_dot(email: str) -> int | None:
     """Return the leading number after the local-part dot, when present."""
     match = NUMBER_AFTER_DOT.fullmatch(email)
-    return int(match.group(1)) if match else None
+    if match is None:
+        return None
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return None
 
 
 def email_sort_key(email: str) -> tuple[int, int, str]:

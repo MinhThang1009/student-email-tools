@@ -13,6 +13,7 @@ from email_tools.email_generator import (
     extract_last_component,
     extract_last_component_from_row,
     extract_name_part,
+    extract_number_after_dot,
     extract_suffix,
     find_excel_files,
     generate_email_report,
@@ -65,6 +66,7 @@ def test_email_sort_key_requires_a_number_after_a_dot() -> None:
 
     assert email_sort_key(numbered) < email_sort_key(no_dot)
     assert email_sort_key("an.207@other.example") == (0, 207, "an.207@other.example")
+    assert extract_number_after_dot(f"a.{'1' * 5000}@example.com") is None
 
 
 def test_generate_emails_handles_mixed_source_formats() -> None:
@@ -178,6 +180,8 @@ def test_normalize_email_values_and_domains() -> None:
     assert normalize_email_override("user.@example.com") is None
     assert normalize_email_override("user..name@example.com") is None
     assert normalize_email_override(None) is None
+    assert normalize_email_override("a" * 65 + "@example.com") is None
+    assert normalize_email_override("a" * 250 + "@example.com") is None
     assert normalize_email_override(pd.NA) is None
 
     with pytest.raises(ValueError, match="Invalid email domain"):
