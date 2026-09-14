@@ -1,0 +1,59 @@
+name: CodeQL
+
+# Repository-managed CodeQL advanced setup. Do not combine this workflow with
+# CodeQL default setup or another process that uploads CodeQL results.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches: ["main"]
+  merge_group:
+    types: [checks_requested]
+  schedule:
+    - cron: "17 3 * * 4"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  packages: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["actions", "python"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: ${{ matrix.language }}
+          dependency-caching: true
+
+      - name: Autobuild
+        if: contains(fromJSON('["c-cpp","csharp","go","java-kotlin","rust","swift"]'), matrix.language)
+        uses: github/codeql-action/autobuild@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: "/language:${{ matrix.language }}"
