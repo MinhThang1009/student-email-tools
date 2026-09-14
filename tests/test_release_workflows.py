@@ -26,6 +26,13 @@ def test_release_please_passes_pat_to_reusable_release_engine() -> None:
         "EVENT_COMMIT: ${{ github.event.release.target_commitish }}" in release_engine
     )
     assert "The published release tag no longer resolves" in release_engine
+    branch_target_message = (
+        "GitHub permits release.target_commitish to be a branch name"
+    )
+    assert branch_target_message in release_engine
+    assert '[[ "${expected_commit}" =~ ^[0-9a-fA-F]+$ ]]' in release_engine
+    assert '[[ "${#expected_commit}" -eq 40 ]]' in release_engine
+    assert '[[ "${#expected_commit}" -eq 64 ]]' in release_engine
     assert "ref: ${{ steps.release.outputs.commit_sha }}" in release_engine
     assert "publish_latest" in release_engine
     assert "gh api --paginate --slurp" in release_engine

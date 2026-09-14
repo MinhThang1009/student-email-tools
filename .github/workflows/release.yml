@@ -463,11 +463,14 @@ jobs:
             exit 1
           fi
           actual_commit="$(resolve_tag_target "${tag}")"
-          if [[ -n "${expected_commit}" ]]; then
-            if [[ ! "${expected_commit}" =~ ^[0-9a-fA-F]+$ ]] ||
-              { [[ "${#expected_commit}" -ne 40 ]] &&
-                [[ "${#expected_commit}" -ne 64 ]]; } ||
-              [[ "${actual_commit,,}" != "${expected_commit,,}" ]]; then
+          # GitHub permits release.target_commitish to be a branch name. The
+          # verified tag target is authoritative unless the payload also gives
+          # us a full Git object ID to compare.
+          if [[ -n "${expected_commit}" ]] &&
+            [[ "${expected_commit}" =~ ^[0-9a-fA-F]+$ ]] &&
+            { [[ "${#expected_commit}" -eq 40 ]] ||
+              [[ "${#expected_commit}" -eq 64 ]]; }; then
+            if [[ "${actual_commit,,}" != "${expected_commit,,}" ]]; then
               echo "::error::The published release tag no longer resolves to the release commit."
               exit 1
             fi
