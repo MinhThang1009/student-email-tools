@@ -17,6 +17,7 @@ Python tools for generating and formatting student email lists from local files.
 - [4. Usage](#4-usage)
   - [4.1 Generate emails from Excel](#41-generate-emails-from-excel)
   - [4.2 Format TXT files](#42-format-txt-files)
+  - [4.3 Recommended local data layout](#43-recommended-local-data-layout)
 - [5. Development](#5-development)
 - [6. Contributing and support](#6-contributing-and-support)
 - [7. Releases](#7-releases)
@@ -56,16 +57,20 @@ For `.xls` support:
 
 ### 4.1 Generate emails from Excel
 
-Place Excel files in a dedicated directory and run:
+Place Excel files in `data/input/excel/` and run:
 
 ```powershell
-python emails.py "D:/data/course"
+python emails.py "data/input/excel" `
+  --output-dir "data/output/emails" `
+  --report "data/reports/email-quality.json"
 ```
 
 Or use the entry point after installing the package:
 
 ```powershell
-generate-emails "D:/data/course"
+generate-emails "data/input/excel" `
+  --output-dir "data/output/emails" `
+  --report "data/reports/email-quality.json"
 ```
 
 Generated email files contain 499 addresses per block, followed by 10 blank
@@ -83,9 +88,9 @@ name-based rule.
 For a quality report and safer output handling:
 
 ```powershell
-generate-emails "D:/data/course" `
-  --output-dir "D:/data/generated" `
-  --report "D:/data/generated/report.json" `
+generate-emails "data/input/excel" `
+  --output-dir "data/output/emails" `
+  --report "data/reports/email-quality.json" `
   --domain "vanlanguni.vn" `
   --no-overwrite
 ```
@@ -99,7 +104,8 @@ is supplied.
 ### 4.2 Format TXT files
 
 ```powershell
-python 10lines.py "D:/data/emails.txt"
+python 10lines.py "data/output/emails/courseid_2287_participants.txt" `
+  --output-dir "data/output/formatted"
 ```
 
 The command creates an `_output.txt` file, with 499 lines per block and 10 blank
@@ -111,6 +117,25 @@ format-email-blocks "D:/data/emails.txt" --lines-per-block 100 --gap-lines 2
 
 `format-email-blocks` also supports `--output-dir`, `--dry-run`, and
 `--no-overwrite`.
+
+### 4.3 Recommended local data layout
+
+Keep private or generated files in the local data pipeline rather than beside
+the source code:
+
+```text
+data/
+├── input/
+│   ├── excel/       # source .xlsx/.xls files
+│   └── text/        # source .txt files for format-email-blocks
+├── output/
+│   ├── emails/      # generated email lists
+│   └── formatted/   # block-formatted TXT files
+└── reports/         # JSON quality reports
+```
+
+The data directories are intentionally ignored by Git. The checked-in
+`.gitkeep` files preserve the layout without publishing participant data.
 
 ## 5. Development
 
