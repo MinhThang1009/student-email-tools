@@ -354,7 +354,10 @@ def generate_email_report(
                     first_prefix.isdigit()
                     and len(first_prefix) >= NUMERIC_IDENTIFIER_MIN_LENGTH
                 )
-                or len(first_prefix) >= LONG_FIRST_PREFIX_LENGTH
+                or (
+                    first_prefix.isdigit()
+                    and len(first_prefix) >= LONG_FIRST_PREFIX_LENGTH
+                )
                 or short_name_without_class
             ):
                 email = f"{first_part}@{domain}"

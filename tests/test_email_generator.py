@@ -158,6 +158,17 @@ def test_integral_numeric_identifiers_do_not_gain_spurious_zeroes() -> None:
     assert generate_emails(dataframe) == ["2673201040001@vanlanguni.vn"]
 
 
+def test_long_alphanumeric_prefixes_keep_the_name_based_rule() -> None:
+    dataframe = pd.DataFrame(
+        {
+            "First name": ["ALPHA123456789 - Given Name"],
+            "Last name": ["Student - 71A"],
+        }
+    )
+
+    assert generate_emails(dataframe) == ["student.alpha123456789@vanlanguni.vn"]
+
+
 def test_normalize_email_values_and_domains() -> None:
     assert normalize_email_domain(" @Example.COM ") == "example.com"
     assert normalize_email_override(r"User\@Example.COM") == "user@example.com"
