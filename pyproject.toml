@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "student-email-tools"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python tools for generating and formatting student email lists."
 readme = "README.md"
 requires-python = ">=3.10"
