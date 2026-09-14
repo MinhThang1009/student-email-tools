@@ -37,3 +37,9 @@ def ensure_safe_output_path(path: Path) -> None:
         if parent == current:
             return
         current = parent
+
+
+def absolute_safe_output_path(path: Path) -> Path:
+    """Validate an output path before returning its absolute lexical form."""
+    ensure_safe_output_path(path)
+    return Path(os.path.abspath(path.expanduser()))

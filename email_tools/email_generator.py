@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from email_tools.path_safety import ensure_safe_output_path
+from email_tools.path_safety import absolute_safe_output_path
 
 EMAIL_DOMAIN = "vanlanguni.vn"
 EXCEL_SUFFIXES = {".xls", ".xlsx"}
@@ -438,7 +438,7 @@ def write_emails(
     """Write one email per line with the requested block spacing."""
     if block_size <= 0:
         raise ValueError("block_size must be greater than 0")
-    ensure_safe_output_path(output_path)
+    output_path = absolute_safe_output_path(output_path)
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"Output file already exists: {output_path}")
     if dry_run:
@@ -462,7 +462,7 @@ def write_generation_report(
     dry_run: bool = False,
 ) -> None:
     """Write source-data quality reports as UTF-8 JSON."""
-    ensure_safe_output_path(output_path)
+    output_path = absolute_safe_output_path(output_path)
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"Report file already exists: {output_path}")
     if dry_run:
@@ -500,14 +500,14 @@ def process_folder(
 
     domain = normalize_email_domain(email_domain)
     destination_dir = (
-        folder if output_dir is None else Path(output_dir).expanduser().resolve()
+        folder if output_dir is None else absolute_safe_output_path(Path(output_dir))
     )
     output_paths: list[Path] = []
     seen_outputs: set[str] = set()
     reports: dict[str, EmailGenerationReport] = {}
     jobs: list[tuple[Path, Path, EmailGenerationReport]] = []
     report_destination = (
-        None if report_path is None else Path(report_path).expanduser().resolve()
+        None if report_path is None else absolute_safe_output_path(Path(report_path))
     )
     for file_path in excel_files:
         output_path = destination_dir / f"{file_path.stem}.txt"

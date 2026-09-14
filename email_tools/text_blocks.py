@@ -6,7 +6,7 @@ import argparse
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-from email_tools.path_safety import ensure_safe_output_path
+from email_tools.path_safety import absolute_safe_output_path
 
 DEFAULT_LINES_PER_BLOCK = 499
 DEFAULT_GAP_LINES = 10
@@ -39,8 +39,10 @@ def output_path_for(input_path: Path, output_dir: Path | str | None = None) -> P
     """Return the conventional output path for a text input file."""
     output_name = f"{input_path.stem}{OUTPUT_SUFFIX}{input_path.suffix}"
     if output_dir is None:
-        return input_path.with_name(output_name)
-    return Path(output_dir).expanduser().resolve() / output_name
+        destination = input_path.with_name(output_name)
+    else:
+        destination = Path(output_dir).expanduser() / output_name
+    return absolute_safe_output_path(destination)
 
 
 def process_text_file(
@@ -62,11 +64,11 @@ def process_text_file(
         raise ValueError("output_path and output_dir cannot be used together")
 
     destination = (
-        Path(output_path).expanduser().resolve()
+        Path(output_path).expanduser()
         if output_path is not None
         else output_path_for(source, output_dir)
     )
-    ensure_safe_output_path(destination)
+    destination = absolute_safe_output_path(destination)
     if destination == source:
         raise ValueError("Output file must differ from the input file")
     if destination.exists() and not overwrite:

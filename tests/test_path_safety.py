@@ -3,7 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from email_tools.path_safety import ensure_safe_output_path, is_link_or_reparse
+from email_tools.path_safety import (
+    absolute_safe_output_path,
+    ensure_safe_output_path,
+    is_link_or_reparse,
+)
 
 
 def test_safe_output_path_allows_regular_nested_paths(tmp_path) -> None:
@@ -12,6 +16,7 @@ def test_safe_output_path_allows_regular_nested_paths(tmp_path) -> None:
     ensure_safe_output_path(output)
 
     assert is_link_or_reparse(output) is False
+    assert absolute_safe_output_path(output) == output.absolute()
 
 
 def test_output_path_rejects_symbolic_links(tmp_path, monkeypatch) -> None:

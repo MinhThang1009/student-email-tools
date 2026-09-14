@@ -493,6 +493,19 @@ def test_process_folder_validates_folder_inputs_and_output_collisions(
         process_folder(tmp_path)
 
 
+def test_process_folder_rejects_link_like_output_directories(
+    tmp_path, monkeypatch
+) -> None:
+    source = tmp_path / "source.xlsx"
+    source.touch()
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    monkeypatch.setattr(Path, "is_symlink", lambda path: path == output_dir)
+
+    with pytest.raises(ValueError, match="symbolic link"):
+        process_folder(tmp_path, output_dir=output_dir)
+
+
 def test_process_folder_rejects_duplicate_excel_headers(tmp_path) -> None:
     source = tmp_path / "duplicate-headers.xlsx"
     pd.DataFrame(
