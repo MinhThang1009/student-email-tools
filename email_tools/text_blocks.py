@@ -124,6 +124,14 @@ def process_folder(
         raise FileNotFoundError(f"No TXT files found in directory: {folder}")
 
     destinations = [output_path_for(path, output_dir) for path in text_files]
+    seen_destinations: set[str] = set()
+    for destination in destinations:
+        destination_key = str(destination).casefold()
+        if destination_key in seen_destinations:
+            raise ValueError(
+                f"Multiple TXT files map to the same output: {destination.name}"
+            )
+        seen_destinations.add(destination_key)
     if not overwrite:
         conflicting_outputs = [path for path in destinations if path.exists()]
         if conflicting_outputs:

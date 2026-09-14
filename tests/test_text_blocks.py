@@ -156,6 +156,20 @@ def test_process_folder_validates_and_supports_output_controls(tmp_path) -> None
     assert no_overwrite_outputs == [no_overwrite_dir.resolve() / "source_output.txt"]
 
 
+def test_process_folder_rejects_casefolded_output_collisions(
+    tmp_path, monkeypatch
+) -> None:
+    first = tmp_path / "a.txt"
+    second = tmp_path / "a.TXT"
+    monkeypatch.setattr(
+        "email_tools.text_blocks.find_text_files",
+        lambda folder: [first, second],
+    )
+
+    with pytest.raises(ValueError, match="same output"):
+        process_folder(tmp_path)
+
+
 def test_parse_args_and_main_cover_file_and_folder_paths(tmp_path) -> None:
     source = tmp_path / "source.txt"
     source.write_text("a\nb\n", encoding="utf-8")
