@@ -312,6 +312,15 @@ def test_generate_email_report_handles_override_warning_skip_and_duplicates() ->
     assert report.to_dict()["generated_emails"] == 2
 
 
+def test_generate_email_report_records_unusable_row_without_override() -> None:
+    dataframe = pd.DataFrame({"First name": [None], "Last name": [None]})
+
+    report = generate_email_report(dataframe, "input.xlsx")
+
+    assert report.skipped_rows == [SkippedRow(2, "unusable name data")]
+    assert report.warnings == []
+
+
 def test_generate_emails_accepts_custom_domain_and_explicit_column() -> None:
     dataframe = pd.DataFrame(
         {
@@ -336,6 +345,18 @@ def test_find_excel_files_filters_lock_files_and_sorts(tmp_path) -> None:
     (tmp_path / "nested").mkdir()
 
     assert find_excel_files(tmp_path) == [tmp_path / "a.xls", tmp_path / "b.XLSX"]
+
+
+def test_find_excel_files_breaks_casefold_ties_deterministically(monkeypatch) -> None:
+    candidates = [Path("z.xlsx"), Path("a.xlsx"), Path("A.xlsx")]
+    monkeypatch.setattr(Path, "iterdir", lambda _path: iter(candidates))
+    monkeypatch.setattr(Path, "is_file", lambda _path: True)
+
+    assert [path.name for path in find_excel_files(Path("input"))] == [
+        "A.xlsx",
+        "a.xlsx",
+        "z.xlsx",
+    ]
 
 
 def test_write_emails_validates_safety_and_formats_blocks(tmp_path) -> None:
@@ -443,6 +464,30 @@ def test_process_folder_writes_outputs_and_report(tmp_path, monkeypatch) -> None
 
     with pytest.raises(ValueError, match="must differ"):
         process_folder(tmp_path, output_dir=output_dir, report_path=outputs[0])
+
+
+def test_process_folder_supports_no_overwrite_without_report(
+    tmp_path, monkeypatch
+) -> None:
+    source = tmp_path / "source.xlsx"
+    source.touch()
+    output_dir = tmp_path / "output"
+
+    monkeypatch.setattr(
+        "email_tools.email_generator.pd.read_excel",
+        lambda path, dtype: pd.DataFrame(
+            {"First name": ["Code - Alpha"], "Last name": ["Beta"]}
+        ),
+    )
+
+    outputs = process_folder(
+        tmp_path,
+        output_dir=output_dir,
+        overwrite=False,
+    )
+
+    assert outputs == [output_dir.resolve() / "source.txt"]
+    assert outputs[0].exists()
 
 
 def test_process_folder_supports_dry_run_and_rejects_conflicts(

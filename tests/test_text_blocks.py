@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from email_tools.text_blocks import (
@@ -86,6 +88,15 @@ def test_output_path_and_process_text_file_safety(tmp_path) -> None:
         process_text_file(source, output_path=output, overwrite=False)
 
 
+def test_process_text_file_preserves_empty_input(tmp_path) -> None:
+    source = tmp_path / "empty.txt"
+    source.write_text("", encoding="utf-8")
+
+    output = process_text_file(source)
+
+    assert output.read_text(encoding="utf-8") == ""
+
+
 def test_find_text_files_filters_generated_and_lock_files(tmp_path) -> None:
     first = tmp_path / "b.TXT"
     second = tmp_path / "a.txt"
@@ -96,6 +107,18 @@ def test_find_text_files_filters_generated_and_lock_files(tmp_path) -> None:
     (tmp_path / "notes.csv").write_text("ignored", encoding="utf-8")
 
     assert find_text_files(tmp_path) == [second, first]
+
+
+def test_find_text_files_breaks_casefold_ties_deterministically(monkeypatch) -> None:
+    candidates = [Path("z.txt"), Path("a.txt"), Path("A.txt")]
+    monkeypatch.setattr(Path, "iterdir", lambda _path: iter(candidates))
+    monkeypatch.setattr(Path, "is_file", lambda _path: True)
+
+    assert [path.name for path in find_text_files(Path("input"))] == [
+        "A.txt",
+        "a.txt",
+        "z.txt",
+    ]
 
 
 def test_process_folder_validates_and_supports_output_controls(tmp_path) -> None:
@@ -123,6 +146,14 @@ def test_process_folder_validates_and_supports_output_controls(tmp_path) -> None
     dry_outputs = process_folder(tmp_path, output_dir=dry_output_dir, dry_run=True)
     assert dry_outputs == [dry_output_dir.resolve() / "source_output.txt"]
     assert not dry_output_dir.exists()
+
+    no_overwrite_dir = tmp_path / "fresh"
+    no_overwrite_outputs = process_folder(
+        tmp_path,
+        output_dir=no_overwrite_dir,
+        overwrite=False,
+    )
+    assert no_overwrite_outputs == [no_overwrite_dir.resolve() / "source_output.txt"]
 
 
 def test_parse_args_and_main_cover_file_and_folder_paths(tmp_path) -> None:

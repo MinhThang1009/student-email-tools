@@ -101,7 +101,7 @@ def find_text_files(folder_path: Path | str) -> list[Path]:
             and not path.name.startswith("~$")
             and not path.stem.casefold().endswith(OUTPUT_SUFFIX.casefold())
         ),
-        key=lambda path: path.name.casefold(),
+        key=lambda path: (path.name.casefold(), path.name),
     )
 
 

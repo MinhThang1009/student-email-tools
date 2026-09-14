@@ -434,7 +434,7 @@ def find_excel_files(folder_path: Path | str) -> list[Path]:
             and path.suffix.casefold() in EXCEL_SUFFIXES
             and not path.name.startswith("~$")
         ),
-        key=lambda path: path.name.casefold(),
+        key=lambda path: (path.name.casefold(), path.name),
     )
 
 
