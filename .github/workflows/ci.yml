@@ -52,15 +52,18 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install dependencies
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
       - name: Lint and type-check
+        shell: bash
         run: |
           python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
           python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
           python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
       - name: Test
+        shell: bash
         run: python -m pytest -q
 
   latest-runtime-canary:

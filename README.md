@@ -9,6 +9,19 @@ Python tools for generating and formatting student email lists from local files.
 
 </div>
 
+## Table of Contents
+
+- [1. Overview](#1-overview)
+- [2. Requirements](#2-requirements)
+- [3. Installation](#3-installation)
+- [4. Usage](#4-usage)
+  - [4.1 Generate emails from Excel](#41-generate-emails-from-excel)
+  - [4.2 Format TXT files](#42-format-txt-files)
+- [5. Development](#5-development)
+- [6. Contributing and support](#6-contributing-and-support)
+- [7. Releases](#7-releases)
+- [8. License](#8-license)
+
 ## 1. Overview
 
 This project provides two commands:
@@ -86,6 +99,21 @@ python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts
 Read [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md), and
 [SECURITY.md](SECURITY.md). Do not commit real student data or email lists.
 
-## 7. License
+## 7. Releases
+
+Release Please creates the release pull request and GitHub Release. The release
+workflow also builds source and wheel distributions and publishes them to PyPI
+using Trusted Publishing.
+
+Before the first package release, configure a PyPI Trusted Publisher with:
+
+- Owner: `MinhThang1009`
+- Repository: `student-email-tools`
+- Workflow: `.github/workflows/release.yml`
+- GitHub environment: `pypi`
+
+See the [PyPI Trusted Publishers guide](https://docs.pypi.org/trusted-publishers/).
+
+## 8. License
 
 This project is released under the [MIT License](LICENSE).
