@@ -1,4 +1,4 @@
-<!-- Canonical Contributor Covenant v3.0, from commit c07bfb0567ef857617faa916ff688943523f7000. -->
+<!-- Canonical Contributor Covenant, version 3.0, from commit c07bfb0567ef857617faa916ff688943523f7000. -->
 
 # Contributor Covenant Code of Conduct
 

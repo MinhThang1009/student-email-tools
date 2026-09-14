@@ -30,7 +30,7 @@ python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py
 
 ## Báo cáo vấn đề
 
-Với lỗi thông thường, mở [Issue](../../issues) kèm bước tái hiện tối thiểu và
+Với lỗi thông thường, mở [Issue](https://github.com/MinhThang1009/student-email-tools/issues) kèm bước tái hiện tối thiểu và
 dữ liệu đã được ẩn danh. Với vấn đề bảo mật, xem [SECURITY.md](SECURITY.md).
 
 Mọi tương tác phải tuân theo [Code of Conduct](CODE_OF_CONDUCT.md).

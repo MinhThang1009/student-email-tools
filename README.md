@@ -4,6 +4,9 @@
 
 Công cụ Python tạo và định dạng danh sách email sinh viên từ file cục bộ.
 
+[![CI](https://github.com/MinhThang1009/student-email-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/MinhThang1009/student-email-tools/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 </div>
 
 ## 1. Tổng quan
