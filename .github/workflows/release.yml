@@ -3,9 +3,9 @@ name: Release engine
 # Reusable and manually dispatchable engine that builds and publishes one GitHub
 # Release for an explicit tag. Assets are attached while the Release is a draft,
 # then the draft is published so the workflow is compatible with repositories
-# that enforce immutable releases. The release event also runs the direct PyPI
-# publisher job below, because PyPI Trusted Publishing does not support a
-# publisher action running inside a reusable workflow.
+# that enforce immutable releases. A release event or explicit manual recovery
+# runs the direct PyPI publisher job below, because PyPI Trusted Publishing does
+# not support a publisher action running inside a reusable workflow.
 on:
   workflow_call:
     inputs:
@@ -27,6 +27,11 @@ on:
         description: Full commit SHA that the version tag must resolve to
         required: true
         type: string
+      pypi_only:
+        description: Publish an existing tag to PyPI without changing its GitHub Release
+        required: false
+        default: false
+        type: boolean
   release:
     types: [published]
 
@@ -41,7 +46,7 @@ concurrency:
 
 jobs:
   build:
-    if: ${{ github.event_name != 'release' }}
+    if: ${{ github.event_name != 'release' && !inputs.pypi_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -202,7 +207,7 @@ jobs:
           retention-days: 1
 
   attest:
-    if: ${{ github.event_name != 'release' }}
+    if: ${{ github.event_name != 'release' && !inputs.pypi_only }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -240,7 +245,7 @@ jobs:
           subject-path: dist/**
 
   publish:
-    if: ${{ github.event_name != 'release' }}
+    if: ${{ github.event_name != 'release' && !inputs.pypi_only }}
     needs: [build, attest]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -388,7 +393,7 @@ jobs:
 
   publish_pypi:
     name: Publish Python distributions to PyPI
-    if: ${{ github.event_name == 'release' }}
+    if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.pypi_only) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
@@ -398,11 +403,39 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${EVENT_TAG:-${INPUT_TAG}}"
+          if [[ ! "${tag}" =~ ^v.+ ]]; then
+            echo "::error::A valid release tag is required."
+            exit 1
+          fi
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
       - name: Checkout published tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ steps.release.outputs.tag }}
           persist-credentials: false
+
+      - name: Verify manual recovery commit
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        env:
+          EXPECTED_COMMIT: ${{ inputs.commit_sha }}
+        run: |
+          set -euo pipefail
+          actual_commit="$(git rev-parse HEAD)"
+          if [[ "${actual_commit,,}" != "${EXPECTED_COMMIT,,}" ]]; then
+            echo "::error::The release tag does not resolve to the requested commit."
+            exit 1
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
