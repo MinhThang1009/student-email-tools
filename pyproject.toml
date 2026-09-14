@@ -47,7 +47,12 @@ check_untyped_defs = true
 ignore_missing_imports = true
 
 [tool.coverage.run]
-include = ["email_tools/*.py", "scripts/*.py", "emails.py", "10lines.py"]
+include = [
+    "email_tools/*.py",
+    "scripts/ci_runtime.py",
+    "emails.py",
+    "10lines.py",
+]
 
 [tool.coverage.report]
 fail_under = 100

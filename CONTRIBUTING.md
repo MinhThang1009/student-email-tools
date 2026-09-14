@@ -25,6 +25,10 @@ python -m mypy --ignore-missing-imports scripts
 python -m compileall -q scripts
 ```
 
+The 100% coverage gate covers the runtime package, legacy launchers, and the CI
+runtime policy. Other maintenance scripts are validated separately with Ruff,
+mypy, bytecode compilation, and their scheduled or documentation workflows.
+
 The maintenance-script lint intentionally ignores `E501` for long parser and
 report-format definitions; import, correctness, type, format, and bytecode checks
 remain enforced.
