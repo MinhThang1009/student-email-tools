@@ -34,13 +34,15 @@ jobs:
         run: python scripts/ci_runtime.py >> "$GITHUB_OUTPUT"
 
   test:
-    name: Test (Python ${{ matrix.python-version }})
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     needs: prepare_runtime
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.prepare_runtime.outputs.matrix) }}
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ${{ fromJSON(needs.prepare_runtime.outputs.matrix)['python-version'] }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -50,7 +52,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
       - name: Lint and type-check
         run: |
           python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
