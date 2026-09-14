@@ -37,6 +37,15 @@ def test_codeql_actions_use_the_current_reviewed_release_pin() -> None:
     assert expected in scorecard
 
 
+def test_ci_requires_a_package_build_gate() -> None:
+    ci = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+
+    assert "package-build:" in ci
+    assert "python -m build --sdist --wheel" in ci
+    assert "needs: [test, package-build]" in ci
+    assert "PACKAGE_BUILD_RESULT: ${{ needs.package-build.result }}" in ci
+
+
 def test_action_pin_sync_defaults_to_workflows_present_in_this_repository() -> None:
     result = subprocess.run(
         [

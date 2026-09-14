@@ -68,6 +68,26 @@ jobs:
           python -m coverage run -m pytest -q
           python -m coverage report --fail-under=100
 
+  package-build:
+    name: package-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.x"
+      - name: Build source and wheel distributions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check "build==1.6.1"
+          python -m build --sdist --wheel --outdir "$RUNNER_TEMP/package-dist"
+
   latest-runtime-canary:
     name: Latest Python runtime canary
     needs: prepare_runtime
@@ -89,7 +109,7 @@ jobs:
 
   ci-success:
     name: ci-success
-    needs: [test]
+    needs: [test, package-build]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -97,9 +117,11 @@ jobs:
       - name: Verify all matrix jobs passed
         env:
           TEST_RESULT: ${{ needs.test.result }}
+          PACKAGE_BUILD_RESULT: ${{ needs.package-build.result }}
         run: |
-          if [ "$TEST_RESULT" != "success" ]; then
-            echo "A matrix job failed: $TEST_RESULT"
+          if [ "$TEST_RESULT" != "success" ] ||
+            [ "$PACKAGE_BUILD_RESULT" != "success" ]; then
+            echo "CI checks failed: test=$TEST_RESULT package-build=$PACKAGE_BUILD_RESULT"
             exit 1
           fi
-          echo "All matrix jobs passed."
+          echo "All CI checks passed."
