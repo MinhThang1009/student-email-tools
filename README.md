@@ -70,7 +70,27 @@ generate-emails "D:/data/course"
 
 Each Excel file produces a TXT file with the same basename. The parser handles
 mixed code/name formats, Vietnamese diacritics, and invalid local-part
-characters.
+characters. If an `Email`, `Email address`, or custom email column is present,
+valid values are used as row-level overrides. Duplicate output addresses are
+reported and emitted once. Numeric identifiers with at least 13 digits are
+emitted as `identifier@domain`; shorter or alphanumeric prefixes use the
+name-based rule.
+
+For a quality report and safer output handling:
+
+```powershell
+generate-emails "D:/data/course" `
+  --output-dir "D:/data/generated" `
+  --report "D:/data/generated/report.json" `
+  --domain "vanlanguni.vn" `
+  --no-overwrite
+```
+
+Use `--dry-run` to inspect the result without writing files. The report records
+the Excel row numbers skipped or warned about, plus duplicate addresses. The
+default domain remains `vanlanguni.vn` and the default behavior still writes
+next to each input file, replacing an existing output unless `--no-overwrite`
+is supplied.
 
 ### 4.2 Format TXT files
 
@@ -85,10 +105,14 @@ lines between blocks by default. Customize the layout with:
 format-email-blocks "D:/data/emails.txt" --lines-per-block 100 --gap-lines 2
 ```
 
+`format-email-blocks` also supports `--output-dir`, `--dry-run`, and
+`--no-overwrite`.
+
 ## 5. Development
 
 ```powershell
-python -m pytest -q
+python -m coverage run -m pytest -q
+python -m coverage report --fail-under=100
 python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py

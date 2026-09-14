@@ -1,11 +1,32 @@
+import json
+from pathlib import Path
+
 import pandas as pd
+import pytest
 
 from email_tools.email_generator import (
+    DuplicateEmail,
+    EmailGenerationReport,
+    SkippedRow,
     email_sort_key,
     extract_component,
+    extract_last_component,
     extract_last_component_from_row,
+    extract_name_part,
+    extract_suffix,
+    find_excel_files,
+    generate_email_report,
     generate_emails,
+    has_hyphen,
+    main,
+    normalize_email_domain,
+    normalize_email_override,
     normalize_local_part,
+    normalize_required_columns,
+    parse_args,
+    process_folder,
+    write_emails,
+    write_generation_report,
 )
 
 
@@ -75,3 +96,360 @@ def test_generate_emails_handles_mixed_source_formats() -> None:
         "24042108031986@vanlanguni.vn",
         "2673201040001@vanlanguni.vn",
     ]
+
+
+def test_thirteen_digit_numeric_identifiers_use_the_identifier_email() -> None:
+    identifiers = [
+        "2672103020113",
+        "2672104090130",
+        "2672104090133",
+        "2673104011231",
+        "2673201040001",
+        "2673201041167",
+        "2673201041551",
+        "2673201041884",
+        "2673201043697",
+        "2673201043993",
+        "2673201044204",
+    ]
+    dataframe = pd.DataFrame(
+        {
+            "First name": [f"{identifier} - Student" for identifier in identifiers],
+            "Last name": ["Family - 71A"] * len(identifiers),
+        }
+    )
+
+    assert generate_emails(dataframe) == [
+        f"{identifier}@vanlanguni.vn" for identifier in identifiers
+    ]
+
+
+def test_extract_helpers_cover_empty_and_fallback_values() -> None:
+    assert extract_component("") is None
+    assert extract_component("-") is None
+    assert extract_component("- Name", leading_hyphen_uses_last_word=False) is None
+    assert extract_component("- Name", leading_hyphen_uses_last_word=True) == "Name"
+    assert extract_component("- 71K01", leading_hyphen_uses_last_word=True) is None
+    assert extract_suffix(None) is None
+    assert extract_suffix("Name") is None
+    assert extract_suffix("Name - ") is None
+    assert extract_name_part("Name") is None
+    assert extract_name_part("Code - Name - Group") == "Name"
+    assert has_hyphen(None) is False
+    assert has_hyphen("") is False
+    assert has_hyphen("A-B") is True
+    assert extract_last_component("- Name") == "Name"
+    assert extract_last_component_from_row("No separator", "- 71K01") is None
+    assert extract_last_component_from_row("Code - 123 - Group", "- 71K01") is None
+
+
+def test_normalize_email_values_and_domains() -> None:
+    assert normalize_email_domain(" @Example.COM ") == "example.com"
+    assert normalize_email_override(r"User\@Example.COM") == "user@example.com"
+    assert normalize_email_override(r"User\\@Example.COM") == "user@example.com"
+    assert normalize_email_override("not-an-email") is None
+    assert normalize_email_override(None) is None
+    assert normalize_email_override(pd.NA) is None
+
+    with pytest.raises(ValueError, match="Invalid email domain"):
+        normalize_email_domain("not a domain")
+
+
+def test_normalize_required_columns_supports_email_aliases_and_errors() -> None:
+    dataframe = pd.DataFrame(
+        [["Code - Name", "Last", "user@example.com"]],
+        columns=[" FIRST NAME ", "Last Name", "Email Address"],
+    )
+    normalized = normalize_required_columns(dataframe, "input.xlsx")
+    assert list(normalized.columns) == ["first name", "last name", "email"]
+
+    custom = pd.DataFrame(
+        [["Code - Name", "Last", "user@example.com"]],
+        columns=["First Name", "Last Name", "Student Contact"],
+    )
+    assert (
+        "email"
+        in normalize_required_columns(
+            custom, "input.xlsx", email_column="student contact"
+        ).columns
+    )
+
+    with pytest.raises(ValueError, match="is missing columns"):
+        normalize_required_columns(pd.DataFrame({"First name": ["A"]}), "input.xlsx")
+
+    duplicate_required = pd.DataFrame(
+        [["A", "B", "C"]], columns=["First name", "first NAME", "Last name"]
+    )
+    with pytest.raises(ValueError, match="has duplicate columns"):
+        normalize_required_columns(duplicate_required, "input.xlsx")
+
+    with pytest.raises(ValueError, match="must not be empty"):
+        normalize_required_columns(dataframe, "input.xlsx", email_column=" ")
+    with pytest.raises(ValueError, match="must differ"):
+        normalize_required_columns(dataframe, "input.xlsx", email_column="First Name")
+    with pytest.raises(ValueError, match="is missing email column"):
+        normalize_required_columns(dataframe, "input.xlsx", email_column="other")
+
+    duplicate_email = pd.DataFrame(
+        [["A", "B", "one@example.com", "two@example.com"]],
+        columns=["First name", "Last name", "Email", "E-mail"],
+    )
+    with pytest.raises(ValueError, match="has duplicate email columns"):
+        normalize_required_columns(duplicate_email, "input.xlsx")
+
+
+def test_generate_email_report_handles_override_warning_skip_and_duplicates() -> None:
+    dataframe = pd.DataFrame(
+        {
+            "First name": [
+                "2500115424 - Alpha Beta",
+                "2500115424 - Alpha Beta",
+                None,
+                "2500115424 - Alpha Beta",
+            ],
+            "Last name": ["Gamma - 71A", "Gamma - 71A", None, "Gamma - 71A"],
+            "Email": [
+                r"Manual\@Example.COM",
+                "invalid",
+                "invalid",
+                None,
+            ],
+        }
+    )
+
+    report = generate_email_report(dataframe, "input.xlsx")
+
+    assert report.total_rows == 4
+    assert report.emails == [
+        "gamma.2500115424@vanlanguni.vn",
+        "manual@example.com",
+    ]
+    assert report.skipped_rows == [
+        SkippedRow(4, "invalid email override and unusable name data")
+    ]
+    assert report.warnings == [
+        SkippedRow(3, "invalid email override; generated from names")
+    ]
+    assert report.duplicate_emails == [
+        DuplicateEmail("gamma.2500115424@vanlanguni.vn", (3, 5))
+    ]
+    assert report.to_dict()["generated_emails"] == 2
+
+
+def test_generate_emails_accepts_custom_domain_and_explicit_column() -> None:
+    dataframe = pd.DataFrame(
+        {
+            "First name": ["Code - Alpha"],
+            "Last name": ["Beta"],
+            "Student contact": ["person@other.example"],
+        }
+    )
+
+    assert generate_emails(
+        dataframe,
+        email_domain="@custom.example",
+        email_column="Student Contact",
+    ) == ["person@other.example"]
+
+
+def test_find_excel_files_filters_lock_files_and_sorts(tmp_path) -> None:
+    (tmp_path / "b.XLSX").touch()
+    (tmp_path / "a.xls").touch()
+    (tmp_path / "~$locked.xlsx").touch()
+    (tmp_path / "notes.txt").touch()
+    (tmp_path / "nested").mkdir()
+
+    assert find_excel_files(tmp_path) == [tmp_path / "a.xls", tmp_path / "b.XLSX"]
+
+
+def test_write_emails_validates_safety_and_formats_blocks(tmp_path) -> None:
+    with pytest.raises(ValueError, match="block_size"):
+        write_emails(["a@example.com"], tmp_path / "out.txt", block_size=0)
+
+    dry_run_path = tmp_path / "dry" / "out.txt"
+    write_emails(["a@example.com"], dry_run_path, dry_run=True)
+    assert not dry_run_path.exists()
+
+    output = tmp_path / "nested" / "out.txt"
+    write_emails(["a@example.com", "b@example.com"], output, block_size=1)
+    assert (
+        output.read_text(encoding="utf-8")
+        == "a@example.com\n\n\n\n\n\nb@example.com\n\n\n\n\n\n"
+    )
+
+    with pytest.raises(FileExistsError, match="already exists"):
+        write_emails(["c@example.com"], output, overwrite=False)
+
+
+def test_write_generation_report_serializes_and_respects_flags(tmp_path) -> None:
+    report = EmailGenerationReport(1, ["a@example.com"], [], [], [])
+    output = tmp_path / "reports" / "report.json"
+    write_generation_report({"input.xlsx": report}, output, email_domain="example.com")
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["email_domain"] == "example.com"
+    assert payload["files"]["input.xlsx"]["generated_emails"] == 1
+
+    dry_run = tmp_path / "dry" / "report.json"
+    write_generation_report(
+        {"input.xlsx": report}, dry_run, email_domain="example.com", dry_run=True
+    )
+    assert not dry_run.exists()
+
+    with pytest.raises(FileExistsError, match="already exists"):
+        write_generation_report(
+            {"input.xlsx": report}, output, email_domain="example.com", overwrite=False
+        )
+
+
+def test_process_folder_writes_outputs_and_report(tmp_path, monkeypatch) -> None:
+    source = tmp_path / "source.xlsx"
+    source.touch()
+    output_dir = tmp_path / "output"
+    report_path = tmp_path / "reports" / "quality.json"
+
+    def fake_read_excel(path, dtype):
+        assert path == source
+        assert dtype is str
+        return pd.DataFrame(
+            {
+                "First name": ["2500115424 - Alpha"],
+                "Last name": ["Beta - 71A"],
+            }
+        )
+
+    monkeypatch.setattr("email_tools.email_generator.pd.read_excel", fake_read_excel)
+    outputs = process_folder(
+        tmp_path,
+        output_dir=output_dir,
+        report_path=report_path,
+        email_domain="custom.example",
+    )
+
+    assert outputs == [output_dir.resolve() / "source.txt"]
+    assert outputs[0].read_text(encoding="utf-8") == "beta.2500115424@custom.example\n"
+    assert report_path.exists()
+
+    with pytest.raises(ValueError, match="must not overwrite"):
+        process_folder(tmp_path, output_dir=output_dir, report_path=source)
+
+    with pytest.raises(ValueError, match="must differ"):
+        process_folder(tmp_path, output_dir=output_dir, report_path=outputs[0])
+
+
+def test_process_folder_supports_dry_run_and_rejects_conflicts(
+    tmp_path, monkeypatch
+) -> None:
+    source = tmp_path / "source.xlsx"
+    source.touch()
+    output_dir = tmp_path / "output"
+    report_path = tmp_path / "report.json"
+
+    monkeypatch.setattr(
+        "email_tools.email_generator.pd.read_excel",
+        lambda path, dtype: pd.DataFrame(
+            {"First name": ["Code - Alpha"], "Last name": ["Beta"]}
+        ),
+    )
+    outputs = process_folder(
+        tmp_path,
+        output_dir=output_dir,
+        report_path=report_path,
+        dry_run=True,
+    )
+    assert outputs == [output_dir.resolve() / "source.txt"]
+    assert not output_dir.exists()
+    assert not report_path.exists()
+
+    output_dir.mkdir()
+    outputs[0].write_text("old\n", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="already exists"):
+        process_folder(tmp_path, output_dir=output_dir, overwrite=False)
+
+    report_path.write_text("old report", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="Report file already exists"):
+        process_folder(
+            tmp_path,
+            output_dir=tmp_path / "another-output",
+            report_path=report_path,
+            overwrite=False,
+        )
+
+
+def test_process_folder_validates_folder_inputs_and_output_collisions(
+    tmp_path, monkeypatch
+) -> None:
+    with pytest.raises(FileNotFoundError, match="Directory not found"):
+        process_folder(tmp_path / "missing")
+    with pytest.raises(FileNotFoundError, match="No Excel files found"):
+        process_folder(tmp_path)
+
+    (tmp_path / "same.xlsx").touch()
+    (tmp_path / "same.xls").touch()
+    monkeypatch.setattr(
+        "email_tools.email_generator.pd.read_excel",
+        lambda path, dtype: pd.DataFrame(
+            {"First name": ["Code - Alpha"], "Last name": ["Beta"]}
+        ),
+    )
+    with pytest.raises(ValueError, match="same output"):
+        process_folder(tmp_path)
+
+
+def test_parse_args_and_main_forward_new_options(tmp_path, monkeypatch) -> None:
+    args = parse_args(
+        [
+            str(tmp_path),
+            "--output-dir",
+            "out",
+            "--report",
+            "report.json",
+            "--domain",
+            "custom.example",
+            "--email-column",
+            "Contact",
+            "--dry-run",
+            "--no-overwrite",
+        ]
+    )
+    assert args.output_dir == Path("out")
+    assert args.report_path == Path("report.json")
+    assert args.domain == "custom.example"
+    assert args.email_column == "Contact"
+    assert args.dry_run is True
+    assert args.no_overwrite is True
+
+    captured = {}
+
+    def fake_process_folder(folder, **kwargs):
+        captured["folder"] = folder
+        captured.update(kwargs)
+        return []
+
+    monkeypatch.setattr(
+        "email_tools.email_generator.process_folder", fake_process_folder
+    )
+    assert (
+        main(
+            [
+                str(tmp_path),
+                "--output-dir",
+                "out",
+                "--report",
+                "report.json",
+                "--domain",
+                "custom.example",
+                "--email-column",
+                "Contact",
+                "--dry-run",
+                "--no-overwrite",
+            ]
+        )
+        == 0
+    )
+    assert captured["folder"] == Path(tmp_path)
+    assert captured["output_dir"] == Path("out")
+    assert captured["report_path"] == Path("report.json")
+    assert captured["email_domain"] == "custom.example"
+    assert captured["email_column"] == "Contact"
+    assert captured["dry_run"] is True
+    assert captured["overwrite"] is False

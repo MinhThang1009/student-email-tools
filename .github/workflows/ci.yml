@@ -64,7 +64,9 @@ jobs:
           python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
       - name: Test
         shell: bash
-        run: python -m pytest -q
+        run: |
+          python -m coverage run -m pytest -q
+          python -m coverage report --fail-under=100
 
   latest-runtime-canary:
     name: Latest Python runtime canary

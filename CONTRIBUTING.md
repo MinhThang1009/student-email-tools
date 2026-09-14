@@ -14,7 +14,8 @@ or test fixtures.
 ## Local checks
 
 ```powershell
-python -m pytest -q
+python -m coverage run -m pytest -q
+python -m coverage report --fail-under=100
 python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
