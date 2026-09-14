@@ -16,7 +16,6 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-
 API_ROOT = "https://api.github.com"
 CONTRIBUTOR_COVENANT_REPOSITORY = "EthicalSource/contributor_covenant"
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024

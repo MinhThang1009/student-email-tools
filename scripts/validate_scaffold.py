@@ -19,7 +19,6 @@ from markdown_it.rules_inline.backticks import backtick as parse_backtick
 from markdown_it.rules_inline.state_inline import StateInline
 from markdown_it.token import Token
 
-
 SKIPPED_DIRECTORIES = {
     ".git",
     ".mypy_cache",

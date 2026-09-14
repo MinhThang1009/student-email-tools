@@ -19,7 +19,6 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 import sync_action_pins
 
-
 PYPI_ROOT = "https://pypi.org/pypi"
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
 MAX_TRACKER_REGISTRY_BYTES = 1024 * 1024

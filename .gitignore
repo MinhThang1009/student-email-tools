@@ -103,3 +103,21 @@ courseid_*.txt
 10lines.txt
 get-pip.py
 venvScriptsactivate.txt
+
+# Keep the local data pipeline out of Git while preserving its directories.
+/data/input/*
+/data/output/*
+/data/reports/*
+!/data/
+!/data/input/
+!/data/output/
+!/data/reports/
+!/data/input/excel/
+!/data/input/text/
+!/data/output/emails/
+!/data/output/formatted/
+!/data/input/excel/.gitkeep
+!/data/input/text/.gitkeep
+!/data/output/emails/.gitkeep
+!/data/output/formatted/.gitkeep
+!/data/reports/.gitkeep

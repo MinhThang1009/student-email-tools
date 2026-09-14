@@ -8,7 +8,6 @@ import re
 import sys
 from pathlib import Path
 
-
 TITLE_TYPE_PATTERN = re.compile(r"^(?P<type>feat|fix|docs)(?:\([^()\r\n]+\))?!?: ")
 TEMPLATE_BY_TITLE_TYPE = {
     "feat": "feature",

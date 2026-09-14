@@ -14,11 +14,24 @@ or test fixtures.
 ## Local checks
 
 ```powershell
-python -m pytest -q
+python -m coverage run -m pytest -q
+python -m coverage report --fail-under=100
 python -m ruff check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m ruff format --check email_tools emails.py 10lines.py scripts/ci_runtime.py tests
 python -m mypy --ignore-missing-imports email_tools emails.py 10lines.py scripts/ci_runtime.py
+python -m ruff check scripts --ignore E501
+python -m ruff format --check scripts
+python -m mypy --ignore-missing-imports scripts
+python -m compileall -q scripts
 ```
+
+The 100% coverage gate covers the runtime package, legacy launchers, and the CI
+runtime policy. Other maintenance scripts are validated separately with Ruff,
+mypy, bytecode compilation, and their scheduled or documentation workflows.
+
+The maintenance-script lint intentionally ignores `E501` for long parser and
+report-format definitions; import, correctness, type, format, and bytecode checks
+remain enforced.
 
 ## Code expectations
 
