@@ -539,13 +539,6 @@ def process_folder(
         reports[file_path.name] = report
         jobs.append((file_path, output_path, report))
         output_paths.append(output_path)
-        status = "Would save" if dry_run else "Saved"
-        print(
-            f"{status} {len(report.emails)} emails from {file_path.name} "
-            f"(skipped {len(report.skipped_rows)} rows, "
-            f"warnings {len(report.warnings)}, "
-            f"duplicates {len(report.duplicate_emails)})"
-        )
 
     if not overwrite:
         conflicting_outputs = [path for _, path, _ in jobs if path.exists()]
@@ -564,12 +557,19 @@ def process_folder(
         if report_key in source_keys:
             raise ValueError("Report path must not overwrite an input file")
 
-    for _, output_path, report in jobs:
+    for file_path, output_path, report in jobs:
         write_emails(
             report.emails,
             output_path,
             overwrite=overwrite,
             dry_run=dry_run,
+        )
+        status = "Would save" if dry_run else "Saved"
+        print(
+            f"{status} {len(report.emails)} emails from {file_path.name} "
+            f"(skipped {len(report.skipped_rows)} rows, "
+            f"warnings {len(report.warnings)}, "
+            f"duplicates {len(report.duplicate_emails)})"
         )
 
     if report_destination is not None:

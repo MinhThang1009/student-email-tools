@@ -490,6 +490,29 @@ def test_process_folder_supports_no_overwrite_without_report(
     assert outputs[0].exists()
 
 
+def test_process_folder_reports_saved_only_after_writing(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    source = tmp_path / "source.xlsx"
+    source.touch()
+    monkeypatch.setattr(
+        "email_tools.email_generator.pd.read_excel",
+        lambda path, dtype: pd.DataFrame(
+            {"First name": ["Code - Alpha"], "Last name": ["Beta"]}
+        ),
+    )
+
+    def fail_write(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr("email_tools.email_generator.write_emails", fail_write)
+
+    with pytest.raises(OSError, match="disk full"):
+        process_folder(tmp_path)
+
+    assert "Saved" not in capsys.readouterr().out
+
+
 def test_process_folder_supports_dry_run_and_rejects_conflicts(
     tmp_path, monkeypatch
 ) -> None:
