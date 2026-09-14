@@ -202,6 +202,30 @@ def test_normalize_required_columns_supports_email_aliases_and_errors() -> None:
     with pytest.raises(ValueError, match="has duplicate email columns"):
         normalize_required_columns(duplicate_email, "input.xlsx")
 
+    pandas_mangled_required = pd.DataFrame(
+        [["A", "B", "C"]], columns=["First name", "First name.1", "Last name"]
+    )
+    with pytest.raises(ValueError, match="has duplicate columns"):
+        normalize_required_columns(pandas_mangled_required, "input.xlsx")
+
+    pandas_mangled_email = pd.DataFrame(
+        [["A", "B", "one@example.com", "two@example.com"]],
+        columns=["First name", "Last name", "Email", "Email.1"],
+    )
+    with pytest.raises(ValueError, match="has duplicate email columns"):
+        normalize_required_columns(pandas_mangled_email, "input.xlsx")
+
+    pandas_mangled_custom_email = pd.DataFrame(
+        [["A", "B", "one@example.com", "two@example.com"]],
+        columns=["First name", "Last name", "Student Contact", "Student Contact.1"],
+    )
+    with pytest.raises(ValueError, match="has duplicate email columns"):
+        normalize_required_columns(
+            pandas_mangled_custom_email,
+            "input.xlsx",
+            email_column="Student Contact",
+        )
+
 
 def test_generate_email_report_handles_override_warning_skip_and_duplicates() -> None:
     dataframe = pd.DataFrame(
@@ -409,6 +433,17 @@ def test_process_folder_validates_folder_inputs_and_output_collisions(
         ),
     )
     with pytest.raises(ValueError, match="same output"):
+        process_folder(tmp_path)
+
+
+def test_process_folder_rejects_duplicate_excel_headers(tmp_path) -> None:
+    source = tmp_path / "duplicate-headers.xlsx"
+    pd.DataFrame(
+        [["2500115424 - Alpha", "2500115424 - Wrong", "Beta - 71A"]],
+        columns=["First name", "First name", "Last name"],
+    ).to_excel(source, index=False)
+
+    with pytest.raises(ValueError, match="has duplicate columns"):
         process_folder(tmp_path)
 
 

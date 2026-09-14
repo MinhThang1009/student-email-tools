@@ -22,6 +22,7 @@ EMAIL_COLUMN_ALIASES = {"email", "email address", "e-mail", "e-mail address"}
 
 PREFIX_SEPARATOR = re.compile(r"\s*-\s*")
 INVALID_LOCAL_PART_CHARS = re.compile(r"[^a-z0-9]")
+PANDAS_MANGLED_COLUMN_PATTERN = re.compile(r"^(?P<base>.+)\.[1-9]\d*$")
 NUMBER_AFTER_DOT = re.compile(r"^[a-z0-9]+\.([0-9]+)[a-z0-9]*@[^@]+$")
 DOMAIN_PATTERN = re.compile(
     r"(?=.{1,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}\Z",
@@ -225,11 +226,24 @@ def normalize_required_columns(
     """Rename required and optional email columns safely."""
     required = ("first name", "last name")
     matches: dict[str, list[object]] = {column: [] for column in required}
+    normalized_columns = {
+        str(column).strip().casefold() for column in dataframe.columns
+    }
+
+    def pandas_mangled_base(normalized: str) -> str | None:
+        match = PANDAS_MANGLED_COLUMN_PATTERN.fullmatch(normalized)
+        if match is None or match.group("base") not in normalized_columns:
+            return None
+        return match.group("base")
 
     for column in dataframe.columns:
         normalized = str(column).strip().casefold()
         if normalized in matches:
             matches[normalized].append(column)
+            continue
+        mangled_base = pandas_mangled_base(normalized)
+        if mangled_base in matches:
+            matches[mangled_base].append(column)
 
     missing = sorted(column for column, values in matches.items() if not values)
     if missing:
@@ -251,7 +265,11 @@ def normalize_required_columns(
         email_matches = [
             column
             for column in dataframe.columns
-            if str(column).strip().casefold() == requested_email_column
+            if (
+                str(column).strip().casefold() == requested_email_column
+                or pandas_mangled_base(str(column).strip().casefold())
+                == requested_email_column
+            )
         ]
         if not email_matches:
             raise ValueError(
@@ -261,7 +279,11 @@ def normalize_required_columns(
         email_matches = [
             column
             for column in dataframe.columns
-            if str(column).strip().casefold() in EMAIL_COLUMN_ALIASES
+            if (
+                str(column).strip().casefold() in EMAIL_COLUMN_ALIASES
+                or pandas_mangled_base(str(column).strip().casefold())
+                in EMAIL_COLUMN_ALIASES
+            )
         ]
 
     if len(email_matches) > 1:
