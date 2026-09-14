@@ -430,6 +430,25 @@ jobs:
           ref: ${{ steps.release.outputs.tag }}
           persist-credentials: false
 
+      - name: Verify published release commit
+        if: ${{ github.event_name == 'release' }}
+        shell: bash
+        env:
+          EXPECTED_COMMIT: ${{ github.event.release.target_commitish }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${EXPECTED_COMMIT}" =~ ^[0-9a-fA-F]+$ ]] ||
+            { [[ "${#EXPECTED_COMMIT}" -ne 40 ]] &&
+              [[ "${#EXPECTED_COMMIT}" -ne 64 ]]; }; then
+            echo "::error::The published release target must be a full commit SHA."
+            exit 1
+          fi
+          actual_commit="$(git rev-parse HEAD)"
+          if [[ "${actual_commit,,}" != "${EXPECTED_COMMIT,,}" ]]; then
+            echo "::error::The published release tag no longer resolves to the release commit."
+            exit 1
+          fi
+
       - name: Verify manual recovery commit
         if: ${{ github.event_name == 'workflow_dispatch' }}
         shell: bash

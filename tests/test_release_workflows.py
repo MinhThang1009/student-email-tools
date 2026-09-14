@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +21,11 @@ def test_release_please_passes_pat_to_reusable_release_engine() -> None:
     )
     assert "RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}" in release_please
     assert "github.event_name == 'release'" in release_engine
+    assert (
+        "EXPECTED_COMMIT: ${{ github.event.release.target_commitish }}"
+        in release_engine
+    )
+    assert "The published release tag no longer resolves" in release_engine
 
 
 def test_codeql_actions_use_the_current_reviewed_release_pin() -> None:
@@ -28,3 +35,32 @@ def test_codeql_actions_use_the_current_reviewed_release_pin() -> None:
     expected = "b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0"
     assert codeql.count(expected) == 3
     assert expected in scorecard
+
+
+def test_action_pin_sync_defaults_to_workflows_present_in_this_repository() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from pathlib import Path; "
+                "from scripts.sync_action_pins import "
+                "action_repositories, workflow_paths; "
+                "paths = workflow_paths(Path.cwd()); "
+                "print(*(path.relative_to(Path.cwd()).as_posix() "
+                "for path in paths), sep='\\n'); "
+                "print(*(repository for path in paths "
+                "for repository in sorted(action_repositories("
+                "path, path.read_text(encoding='utf-8')))), "
+                "sep='\\n')"
+            ),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert ".github\\workflows" in result.stdout or ".github/workflows" in result.stdout
+    assert "pypa/gh-action-pypi-publish" in result.stdout
